@@ -2,7 +2,7 @@
 
 # Author : neroxps
 # Email : neroxps@gmail.com
-# Version : 2.0
+# Version : 2.1
 # Date : 2018-8-4
 
 # 颜色
@@ -22,10 +22,13 @@ users_num=${#users[*]}
 ## 检查系统架构以区 machine
 if [[ $(getconf LONG_BIT) == "64" ]]; then
     machine_map=(raspberrypi3-64 qemuarm-64 qemux86-64)
+    default_machine="qemux86-64"
 elif [[ $(getconf LONG_BIT) == "32" ]]; then
     machine_map=(raspberrypi raspberrypi2 raspberrypi3 qemuarm qemux86 intel-nuc)
+    default_machine="qemux86"
 else
     machine_map=(raspberrypi raspberrypi2 raspberrypi3 qemuarm qemux86 intel-nuc raspberrypi3-64 qemuarm-64 qemux86-64)
+    default_machine="qemux86-64"
 fi
 machine_num=${#machine_map[*]}
 
@@ -346,7 +349,7 @@ echo ''
 echo ''
 while true;do
     i=1
-    echo -e "(4).请选择你设备类型（默认：qemux86-64）"
+    echo -e "(4).请选择你设备类型（默认：${default_machine}）"
     for name in ${machine_map[@]}; do
         echo -e "    [${i}]: ${name}"
         let i++
@@ -359,7 +362,7 @@ while true;do
             break;
             ;;
         '')
-            machine='qemux86-64'
+            machine=${default_machine}
             echo -e "你选择了 ${machine}"
             break;
             ;;
