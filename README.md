@@ -17,9 +17,9 @@ hassio 一键安装脚本，实现以下功能。
 以 root 身份运行以下命令。
 
 ```bash
-curl -sL -o hassio_install.sh https://raw.githubusercontent.com/neroxps/hassio_install/master/install.sh
-chmod a+x hassio_install.sh
-./hassio_install.sh
+wget https://raw.githubusercontent.com/neroxps/hassio_install/master/install.sh
+chmod a+x install.sh
+./install.sh
 ```
 
 ### 如果安装的是 64 位系统，脚本会自动筛选适配 64 位的设备列表
