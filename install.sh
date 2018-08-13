@@ -207,8 +207,19 @@ EOF
 
 ## hassio 安装
 hassio_install(){
-    hassio_version=$(curl -Ls https://registry.hub.docker.com/v1/repositories/homeassistant/amd64-hassio-supervisor/tags | jq -r 'length as $num |.[$num - 1].name')
-    homeassistant_version=$(curl -Ls https://registry.hub.docker.com/v1/repositories/homeassistant/qemux86-64-homeassistant/tags | jq -r 'length as $num |.[$num - 2].name')
+	local i=10
+	while true;do
+		stable_json=$(curl -Ls https://raw.githubusercontent.com/neroxps/qemux86-64-homeassistant/master/stable.json)
+		if [[ ! -z ${stable_json} ]]; then
+			break;
+		fi
+		if [[ $i -eq 0 ]]; then
+			echo -e "${red}[ERROR]: 获取版本号失败，请检查你系统网络与 https://raw.githubusercontent.com 的连接是否正常。${plain}"
+		fi
+		let i--
+	done
+	hassio_version=$(echo ${stable_json} |jq -r '.supervisor')
+	homeassistant_version=$(echo ${stable_json} |jq -r '.homeassistant.default')
     if [ -z ${hassio_version} ] || [ -z ${homeassistant_version} ];then
         echo -e "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 registry.hub.docker.com 连接是否畅通。${plain}"
         echo -e "${red}脚本退出...${plain}"
