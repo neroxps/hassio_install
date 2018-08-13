@@ -2,8 +2,8 @@
 
 # Author : neroxps
 # Email : neroxps@gmail.com
-# Version : 2.1
-# Date : 2018-8-4
+# Version : 2.2
+# Date : 2018-08-13
 
 # 颜色
 red='\033[0;31m'
