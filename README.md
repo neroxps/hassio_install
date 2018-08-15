@@ -89,8 +89,6 @@ chmod a+x install.sh
 
 ### 设备类型选型说明
 
-
-
 - raspberrypi : 树莓派1代
 - raspberrypi2 : 树莓派2代
 - raspberrypi3 : 树莓派3代（或3B+）
@@ -100,3 +98,23 @@ chmod a+x install.sh
 - qemux86-64 : X86-64位系统通用（普通的PC机电脑）
 - qemux86 : X86-64位系统通用（普通的PC机电脑）
 - intel-nuc : 英特尔的nuc小主机
+
+# Hassio 升级脚本
+
+由于网络原因，hassio_supervisor 经常如下报告:
+
+```bash
+18-08-15 03:57:02 WARNING (MainThread) [hassio.updater] Can't fetch versions from https://s3.amazonaws.com/hassio-version/stable.json
+```
+
+无法从亚马逊刷新最新版的 json 文件，导致 hassio 升级失败，我制作了 hassio 升级脚本，可以使用脚本手动升级。
+
+## 使用方法
+
+请使用 root 权限运行以下命令。
+
+```bash
+wget https://raw.githubusercontent.com/neroxps/hassio_install/master/hassio_upgrade.sh
+chmod u+x hassio_upgrade.sh
+./hassio_upgrade.sh
+```
