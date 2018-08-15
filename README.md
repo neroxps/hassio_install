@@ -91,12 +91,12 @@ chmod a+x install.sh
 
 
 
-raspberrypi : 树莓派1代
-raspberrypi2 : 树莓派2代
-raspberrypi3 : 树莓派3代（或3B+）
-raspberrypi3-64  : 树莓派3代（或3B+）
-qemuarm : 其余未知的arm设备（例如斐讯N1)
-qemuarm-64 : 其余未知的arm设备（例如斐讯N1)
-qemux86-64 : X86-64位系统通用（普通的PC机电脑）
-qemux86 : X86-64位系统通用（普通的PC机电脑）
-intel-nuc : 英特尔的nuc小主机
+- raspberrypi : 树莓派1代
+- raspberrypi2 : 树莓派2代
+- raspberrypi3 : 树莓派3代（或3B+）
+- raspberrypi3-64  : 树莓派3代（或3B+）
+- qemuarm : 其余未知的arm设备（例如斐讯N1)
+- qemuarm-64 : 其余未知的arm设备（例如斐讯N1)
+- qemux86-64 : X86-64位系统通用（普通的PC机电脑）
+- qemux86 : X86-64位系统通用（普通的PC机电脑）
+- intel-nuc : 英特尔的nuc小主机
