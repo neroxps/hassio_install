@@ -289,7 +289,7 @@ echo ''
 while true;do
     if [[ ${users_num} -ne 1 ]];then
         echo -e "(2). 找到该系统中有以下用户名"
-        echo -e "如下方列表未显示你的用户名，请切换回你用户账号后输入 usermod -aG docker '$USER' 添加用户都 docker 用户组。"
+        echo -e "如下方列表未显示你的用户名，请切换回你用户账号后输入 usermod -aG docker '$USER' 添加用户到 docker 用户组。"
         i=1
         while [[ $i -le ${users_num} ]]; do
             echo -e "    [${i}]: ${users[$((($i-1)))]}"
