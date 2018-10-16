@@ -32,6 +32,8 @@ else
 fi
 machine_num=${#machine_map[*]}
 
+
+
 # Function
 
 ## 这个方法抄袭自 https://github.com/teddysun/shadowsocks_install
@@ -99,6 +101,10 @@ download_file(){
         else
             wget --output-document=${file_name} ${url}
         fi
+    fi
+    if [[ $? -ne 0 ]];then
+        echo -e "${red}[ERROR]: 下载 ${url} 失败，请检查网络与其连接是否正常。${plain}"
+        exit 1
     fi
 }
 
@@ -215,14 +221,14 @@ hassio_install(){
 			break;
 		fi
 		if [[ $i -eq 0 ]]; then
-			echo -e "${red}[ERROR]: 获取版本号失败，请检查你系统网络与 https://raw.githubusercontent.com 的连接是否正常。${plain}"
+			echo -e "${red}[ERROR]: 获取 hassio 版本号失败，请检查你系统网络与 https://raw.githubusercontent.com 的连接是否正常。${plain}"
 		fi
 		let i--
 	done
 	hassio_version=$(echo ${stable_json} |jq -r '.supervisor')
 	homeassistant_version=$(echo ${stable_json} |jq -r '.homeassistant.default')
     if [ -z ${hassio_version} ] || [ -z ${homeassistant_version} ];then
-        echo -e "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 registry.hub.docker.com 连接是否畅通。${plain}"
+        echo -e "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 https://raw.githubusercontent.com 连接是否畅通。${plain}"
         echo -e "${red}脚本退出...${plain}"
         exit 1
     fi
