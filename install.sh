@@ -32,8 +32,6 @@ else
 fi
 machine_num=${#machine_map[*]}
 
-
-
 # Function
 
 ## 这个方法抄袭自 https://github.com/teddysun/shadowsocks_install
@@ -252,7 +250,12 @@ cat << EOF > /usr/share/hassio/updater.json
 }
 EOF
     echo -e "${yellow}开始 hassio 安装流程。${plain}"
-    ./hassio_install.sh -m ${machine}
+    if [[ -z ${data_share_path} ]]; then
+        ./hassio_install.sh -m ${machine}
+    else
+        ./hassio_install.sh -m ${machine} --data-share ${data_share_path}
+    fi
+    
     if ! systemctl status hassio-supervisor > /dev/null ; then
         echo -e "${red}安装 hassio 失败，请将上方安装信息发送到论坛询问。${plain}"
         echo -e "${red}脚本退出...${plain}"
@@ -266,7 +269,7 @@ EOF
 
 ## 检查脚本运行环境
 if [[ $USER != "root" ]];then
-    echo -e "${red}[ERROR]: 请输入 \"sudo -s\" 切换至 root 账户运行本脚本...脚本退出"
+    echo -e "${red}[ERROR]: 请输入 \"sudo -s\" 切换至 root 账户运行本脚本...脚本退出${plain}"
     exit 1
 fi
 
@@ -389,11 +392,46 @@ while true;do
             ;;
     esac
 done
+
+### 5. 选择 hassio 数据保存路径。
+echo ''
+echo ''
+while true;do
+    echo -e "(5).是否需要设置 hassio 数据保存路径（默认：/usr/share/hassio）"
+    read -p "请输入 yes 或 no (默认：no）:" selected
+    case ${selected} in
+        Yes|YES|yes|y|Y)
+            while true; do
+                read -p "请输入路径:" data_share_path
+                if [[ ! -d ${data_share_path} ]]; then
+                    mkdir -p ${data_share_path}
+                    if [[ $? -ne 0 ]];then 
+                        echo -e "[ERROR] 无法设置改目录为 hassio 数据目录，权限不够。"
+                    else
+                        echo -e "[INFO] 设置路径 ${data_share_path} 成功。"
+                        break;
+                    fi
+                else
+                    break;
+                fi
+            done
+            break;
+            ;;
+        ''|No|NO|no|n|N)
+            echo -e "hassio 数据路径为默认路径: /usr/share/hassio"
+            break;
+            ;;
+        *)
+            echo -e "请输入 Yes 或者 No 后按回车确认。"
+            ;;
+    esac
+done
 echo " ################################################################################"
 echo -e " # 1. 是否将系统源切换为中科大(USTC)源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}"
 echo -e " # 2. 是否将用户添加至 Docker 用户组:   ${yellow}$(if [ -z ${add_User_Docker} ];then echo "否";else echo "是,添加用户为 ${add_User_Docker}";fi) ${plain}"
 echo -e " # 3. 是否将 Docker 源切换至国内源:     ${yellow}$(if ${CDR};then echo "是"; else echo "否";fi)${plain}"
 echo -e " # 4. 您的设备类型为:                   ${yellow}${machine}${plain}"
+echo -e " # 5. 您的 hassio 数据路径为:           ${yellow}${data_share_path}${plain}"
 echo " ################################################################################"
 echo "请确认以上信息，继续请按任意键，如需修改请输入 Ctrl+C 结束任务重新执行脚本。"
 
