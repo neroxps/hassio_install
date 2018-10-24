@@ -170,7 +170,7 @@ docker_install(){
     download_file 'https://raw.githubusercontent.com/docker/docker-install/master/install.sh' 'get-docker.sh'
     sed -i 's/DEFAULT_CHANNEL_VALUE="test"/DEFAULT_CHANNEL_VALUE="edge"/' get-docker.sh
     chmod u+x get-docker.sh
-    ./get-docker.sh
+    ./get-docker.sh --mirror Aliyun
     if ! systemctl status docker > /dev/null 2>&1 ;then
         echo -e "${red}[ERROR]: Docker 安装失败，请检查上方安装错误信息。${plain}"
         exit 1
