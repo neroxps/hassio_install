@@ -109,7 +109,7 @@ download_file(){
 ## 切换安装源
 replace_source(){
     if check_sys sysRelease ubuntu ; then
-        cp /etc/apt/sources.list /etc/apt/sources.list.bak
+        [[ ! -f "/etc/apt/sources.list.bak" ]] && cp /etc/apt/sources.list /etc/apt/sources.list.bak
         sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
         apt update
         if [[ $? == 0 ]]; then
