@@ -111,6 +111,7 @@ replace_source(){
     if check_sys sysRelease ubuntu ; then
         [[ ! -f "/etc/apt/sources.list.bak" ]] && cp /etc/apt/sources.list /etc/apt/sources.list.bak
         sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
+        sed -i 's/deb cdrom/\#deb cdrom/g' /etc/apt/sources.list
         apt update
         if [[ $? == 0 ]]; then
             echo -e "${green}[info]: 已将系统源切换为中科大源，源文件备份至 /etc/apt/sources.list.bak。${plain}"
