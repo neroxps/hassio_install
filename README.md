@@ -3,7 +3,7 @@
 hassio 一键安装脚本，实现以下功能。
 
 1. 自动更改系统源为中科大源。（目前支持 Debian Ubuntu Raspbian 三款系统）
-2. 自动安装 Docker，可以选择切换 Docker 源为国内源，提高容器下载速度。
+2. 自动安装 Docker，可以选择切换 Docker 源为国内源，提高容器下载速度。（注意：Ubuntu 18.10 get.docker.com 官方暂不支持安装docker）
 3. 避开 Hassio 因亚马逊连接超时导致无法拉取最新版本的 Homeassistant 容器。
 
 ## 目前支持的系统
