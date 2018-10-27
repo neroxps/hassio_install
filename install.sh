@@ -2,8 +2,8 @@
 
 # Author : neroxps
 # Email : neroxps@gmail.com
-# Version : 2.2
-# Date : 2018-08-13
+# Version : 3.0
+# Date : 2018-10-27
 
 # 颜色
 red='\033[0;31m'
@@ -18,6 +18,9 @@ Ubunt_Debian_Requirements="curl socat jq avahi-daemon"
 ## 获取系统用户用作添加至 docker 用户组
 users=($(cat /etc/passwd | awk -F: '$3>=500' | cut -f 1 -d :| grep -v nobody))
 users_num=${#users[*]}
+
+title_num=1
+check_massage=()
 
 ## 检查系统架构以区 machine
 if [[ $(getconf LONG_BIT) == "64" ]]; then
@@ -39,47 +42,35 @@ check_sys(){
     local checkType=$1
     local value=$2
 
-    local release=''
-    local systemPackage=''
-
     if [[ -f /etc/redhat-release ]]; then
         release="centos"
         systemPackage="yum"
     elif grep -Eqi "debian" /etc/issue; then
         release="debian"
         systemPackage="apt"
+        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
     elif grep -Eqi "ubuntu" /etc/issue; then
         release="ubuntu"
         systemPackage="apt"
+        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
     elif grep -Eqi "centos|red hat|redhat" /etc/issue; then
         release="centos"
         systemPackage="yum"
     elif grep -Eqi "debian" /proc/version; then
         release="debian"
         systemPackage="apt"
+        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
     elif grep -Eqi "raspbian" /proc/version; then
         release="raspbian"
         systemPackage="apt"
+        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
     elif grep -Eqi "ubuntu" /proc/version; then
         release="ubuntu"
         systemPackage="apt"
+        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
     elif grep -Eqi "centos|red hat|redhat" /proc/version; then
         release="centos"
         systemPackage="yum"
-    fi
-
-    if [[ "${checkType}" == "sysRelease" ]]; then
-        if [ "${value}" == "${release}" ]; then
-            return 0
-        else
-            return 1
-        fi
-    elif [[ "${checkType}" == "packageManager" ]]; then
-        if [ "${value}" == "${systemPackage}" ]; then
-            return 0
-        else
-            return 1
-        fi
     fi
 }
 
@@ -108,48 +99,27 @@ download_file(){
 
 ## 切换安装源
 replace_source(){
-    if check_sys sysRelease ubuntu ; then
-        [[ ! -f "/etc/apt/sources.list.bak" ]] && cp /etc/apt/sources.list /etc/apt/sources.list.bak
-        sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
-        sed -i 's/deb cdrom/\#deb cdrom/g' /etc/apt/sources.list
-        apt update
-        if [[ $? == 0 ]]; then
-            echo -e "${green}[info]: 已将系统源切换为中科大源，源文件备份至 /etc/apt/sources.list.bak。${plain}"
-        else
-            mv /etc/apt/sources.list.bak /etc/apt/sources.list
-            echo -e "${red}[ERROR]: 系统源切换错误，请检查网络连接是否正常，脚本退出{plain}"
-            exit 1
-        fi
-    elif check_sys sysRelease debian ; then
-        cp /etc/apt/sources.list /etc/apt/sources.list.bak
-        sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
-        apt update
-        if [[ $? == 0 ]]; then
-            echo -e "${green}[info]: 已将系统源切换为中科大源，源文件备份至 /etc/apt/sources.list.bak。${plain}"
-        else
-            mv /etc/apt/sources.list.bak /etc/apt/sources.list
-            echo -e "${red}[ERROR]: 系统源切换错误，请检查网络连接是否正常，脚本退出。${plain}"
-            exit 1
-        fi
-    elif check_sys sysRelease raspbian ; then
-        cp /etc/apt/sources.list /etc/apt/sources.list.bak
-        sed -i 's|raspbian.raspberrypi.org|mirrors.ustc.edu.cn/raspbian|g' /etc/apt/sources.list
-        sed -i 's|mirrordirector.raspbian.org|mirrors.ustc.edu.cn/raspbian|g' /etc/apt/sources.list
-        sed -i 's|archive.raspbian.org|mirrors.ustc.edu.cn/raspbian|g' /etc/apt/sources.list
-        apt update
-        if [[ $? == 0 ]]; then
-            echo -e "${green}[info]: 已将系统源切换为中科大源，源文件备份至 /etc/apt/sources.list.bak。${plain}"
-        else
-            mv /etc/apt/sources.list.bak /etc/apt/sources.list
-            echo -e "${red}[ERROR]: 系统源切换错误，请检查网络连接是否正常，脚本退出。${plain}"
-            exit 1
-        fi
+    if [[ -z ${systemCodename} ]]; then
+        echo "${red}[ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考中科大源使用方法：http://mirrors.ustc.edu.cn/help/${plain}" 
+        exit 1
+    fi
+    [[ ! -f /etc/apt/sources.list.bak ]] && mv /etc/apt/sources.list /etc/apt/sources.list.bak
+    if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
+        download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
+    elif [[  ${release} == "raspbian" ]]; then
+        echo "deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/debian/ ${systemCodename} main ui" > /etc/apt/sources.list
+    fi
+    apt update
+    if [[ $? -ne 0 ]]; then
+        echo -e "${red}[ERROR]: 系统源切换错误，请检查网络连接是否正常，脚本退出${plain}"
+        mv /etc/apt/sources.list.bak /etc/apt/sources.list
+        exit 1
     fi
 }
 
 ## 更新系统
 update_system(){
-    if check_sys sysRelease ubuntu || check_sys sysRelease debian ;then
+    if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
         apt upgrade -y
         if [[ $? != 0 ]]; then
             echo -e "${red}[ERROR]: 系统更新失败，脚本退出。${plain}"
@@ -157,7 +127,7 @@ update_system(){
         fi
         echo -e "${green}[info]: 系统更新成功。${plain}"
     fi
-    if check_sys sysRelease ubuntu ; then
+    if [[ ${release} == "ubuntu" ]] ; then
         add-apt-repository main
         add-apt-repository universe
         add-apt-repository restricted
@@ -174,6 +144,7 @@ docker_install(){
     ./get-docker.sh --mirror Aliyun
     if ! systemctl status docker > /dev/null 2>&1 ;then
         echo -e "${red}[ERROR]: Docker 安装失败，请检查上方安装错误信息。${plain}"
+        echo -e "${red}你也可以选择通过搜索引擎，搜索你系统安装docker的方法，安装后重新执行脚本。${plain}"
         exit 1
     else
         echo -e "${green}[info]: Docker 安装成功。${plain}"
@@ -250,7 +221,7 @@ cat << EOF > /usr/share/hassio/updater.json
   "homeassistant": "${homeassistant_version}"
 }
 EOF
-    echo -e "${yellow}开始 hassio 安装流程。${plain}"
+    echo -e "${yellow}开始 hassio 安装流程。(如出现 [Warning] 请忽略，无须理会)${plain}"
     if [[ -z ${data_share_path} ]]; then
         ./hassio_install.sh -m ${machine}
     else
@@ -266,6 +237,7 @@ EOF
     fi
 }
 
+
 # Main
 
 ## 检查脚本运行环境
@@ -276,7 +248,7 @@ fi
 
 ## 配置安装选项
 ### 1. 配置安装源
-echo -e "(1). 是否将系统源切换为中科大(USTC)源（目前支持 Debian Ubuntu Raspbian 三款系统）"
+echo -e "(${title_num}). 是否将系统源切换为中科大(USTC)源（目前支持 Debian Ubuntu Raspbian 三款系统）"
 read -p "请输入 y or n（默认 yes):" selected
 while true; do
     case ${selected} in
@@ -293,14 +265,16 @@ while true; do
             ;;
     esac
 done
+check_massage+=(" # ${title_num}. 是否将系统源切换为中科大(USTC)源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
+let title_num++
 
 ### 2. 是否将用户添加至 docker 用户组
 echo ''
 echo ''
 while true;do
     if [[ ${users_num} -ne 1 ]];then
-        echo -e "(2). 找到该系统中有以下用户名"
-        echo -e "如下方列表未显示你的用户名，请切换回你用户账号后输入 usermod -aG docker '$USER' 添加用户到 docker 用户组。"
+        echo -e "($title_num). 找到该系统中有以下用户名"
+        echo -e "如下方列表未显示你的用户名，请切换回你用户账号后输入 sudo usermod -aG docker \$USER 添加用户到 docker 用户组。"
         i=1
         while [[ $i -le ${users_num} ]]; do
             echo -e "    [${i}]: ${users[$((($i-1)))]}"
@@ -323,11 +297,11 @@ while true;do
                 break;
                 ;;
             *)
-                echo -e "请输入列表中的数字后按回车。"
+                echo -e "请输入列表中的数字后按回车，如无数字请输入 s 跳过。"
                 ;;
         esac
     else
-        echo -e "(2). 在你系统内找到 ${users[0]} 用户，是否将其添加至 docker 用户组。"
+        echo -e "(${title_num}). 在你系统内找到 ${users[0]} 用户，是否将其添加至 docker 用户组。"
         read -p "请输入 yes 或者 no （默认 yes）：" selected
         case ${selected} in
             ''|Yes|YES|yes|y|Y)
@@ -345,11 +319,12 @@ while true;do
         esac
     fi
 done
-
+check_massage+=(" # ${title_num}. 是否将用户添加至 Docker 用户组:   ${yellow}$(if [ -z ${add_User_Docker} ];then echo "否";else echo "是,添加用户为 ${add_User_Docker}";fi) ${plain}")
+let title_num++
 ### 3. 选择是否切换 Docker 国内源
 echo ''
 echo ''
-echo -e "(3).是否需要替换 docker 默认源？"
+echo -e "(${title_num}).是否需要替换 docker 默认源？"
 while true; do
     read -p '请输入 yes 或者 no（默认：yes）：' selected
     case ${selected} in
@@ -365,13 +340,15 @@ while true; do
                 echo -e "输入错误，请重新输入。"
     esac
 done
+check_massage+=(" # ${title_num}. 是否将 Docker 源切换至国内源:     ${yellow}$(if ${CDR};then echo "是"; else echo "否";fi)${plain}")
+let title_num++
 
 ### 4. 选择设备类型，用于选择 hassio 拉取 homeassistant 容器之用。
 echo ''
 echo ''
 while true;do
     i=1
-    echo -e "(4).请选择你设备类型（默认：${default_machine}）"
+    echo -e "(${title_num}).请选择你设备类型（默认：${default_machine}）"
     for name in ${machine_map[@]}; do
         echo -e "    [${i}]: ${name}"
         let i++
@@ -393,12 +370,14 @@ while true;do
             ;;
     esac
 done
+check_massage+=(" # ${title_num}. 您的设备类型为:                   ${yellow}${machine}${plain}")
+let title_num++
 
 ### 5. 选择 hassio 数据保存路径。
 echo ''
 echo ''
 while true;do
-    echo -e "(5).是否需要设置 hassio 数据保存路径（默认：/usr/share/hassio）"
+    echo -e "(${title_num}).是否需要设置 hassio 数据保j存路径（默认：/usr/share/hassio）"
     read -p "请输入 yes 或 no (默认：no）:" selected
     case ${selected} in
         Yes|YES|yes|y|Y)
@@ -427,16 +406,17 @@ while true;do
             ;;
     esac
 done
+check_massage+=(" # ${title_num}. 您的 hassio 数据路径为:           ${yellow}$([[ -z ${data_share_path} ]] && echo '/usr/share/hassio' || echo ${data_share_path})${plain}")
+
 echo " ################################################################################"
-echo -e " # 1. 是否将系统源切换为中科大(USTC)源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}"
-echo -e " # 2. 是否将用户添加至 Docker 用户组:   ${yellow}$(if [ -z ${add_User_Docker} ];then echo "否";else echo "是,添加用户为 ${add_User_Docker}";fi) ${plain}"
-echo -e " # 3. 是否将 Docker 源切换至国内源:     ${yellow}$(if ${CDR};then echo "是"; else echo "否";fi)${plain}"
-echo -e " # 4. 您的设备类型为:                   ${yellow}${machine}${plain}"
-echo -e " # 5. 您的 hassio 数据路径为:           ${yellow}${data_share_path}${plain}"
+for (( i = 0; i < ${#check_massage[@]}; i++ )); do echo -e "${check_massage[$i]}"; done 
 echo " ################################################################################"
 echo "请确认以上信息，继续请按任意键，如需修改请输入 Ctrl+C 结束任务重新执行脚本。"
 
 read selected
+
+## 检查系统版本
+check_sys
 
 ## 切换安装源
 if  [[ ${apt_sources} == true ]]; then
