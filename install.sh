@@ -105,6 +105,7 @@ replace_source(){
     fi
     [[ ! -f /etc/apt/sources.list.bak ]] && mv /etc/apt/sources.list /etc/apt/sources.list.bak
     if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
+        [[ -f /etc/apt/sources.list.d/armbian.list ]] && mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
         download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
     elif [[  ${release} == "raspbian" ]]; then
         echo "deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/debian/ ${systemCodename} main ui" > /etc/apt/sources.list
