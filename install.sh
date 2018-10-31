@@ -378,7 +378,7 @@ let title_num++
 echo ''
 echo ''
 while true;do
-    echo -e "(${title_num}).是否需要设置 hassio 数据保j存路径（默认：/usr/share/hassio）"
+    echo -e "(${title_num}).是否需要设置 hassio 数据保存路径（默认：/usr/share/hassio）"
     read -p "请输入 yes 或 no (默认：no）:" selected
     case ${selected} in
         Yes|YES|yes|y|Y)
