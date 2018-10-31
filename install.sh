@@ -103,9 +103,9 @@ replace_source(){
         echo "${red}[ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考中科大源使用方法：http://mirrors.ustc.edu.cn/help/${plain}" 
         exit 1
     fi
-    [[ ! -f /etc/apt/sources.list.bak ]] && mv /etc/apt/sources.list /etc/apt/sources.list.bak
+    [[ ! -f /etc/apt/sources.list.bak ]] && echo "${yellow}备份系统原来源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
     if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
-        [[ -f /etc/apt/sources.list.d/armbian.list ]] && mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
+        [[ -f /etc/apt/sources.list.d/armbian.list ]] && echo "${yellow}发现 armbian 源，armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}" && mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
         download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
     elif [[  ${release} == "raspbian" ]]; then
         echo "deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/debian/ ${systemCodename} main ui" > /etc/apt/sources.list
