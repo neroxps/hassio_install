@@ -103,8 +103,9 @@ replace_source(){
         echo "${red}[ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考中科大源使用方法：http://mirrors.ustc.edu.cn/help/${plain}" 
         exit 1
     fi
-    [[ ! -f /etc/apt/sources.list.bak ]] && mv /etc/apt/sources.list /etc/apt/sources.list.bak
+    [[ ! -f /etc/apt/sources.list.bak ]] && echo "${yellow}备份系统原来源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
     if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
+        [[ -f /etc/apt/sources.list.d/armbian.list ]] && echo "${yellow}发现 armbian 源，armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}" && mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
         download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
     elif [[  ${release} == "raspbian" ]]; then
         echo "deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/debian/ ${systemCodename} main ui" > /etc/apt/sources.list
@@ -237,6 +238,10 @@ EOF
     fi
 }
 
+ubuntu_18_10_docker_install(){
+    apt install docker.io -y
+}
+
 
 # Main
 
@@ -248,25 +253,32 @@ fi
 
 ## 配置安装选项
 ### 1. 配置安装源
-echo -e "(${title_num}). 是否将系统源切换为中科大(USTC)源（目前支持 Debian Ubuntu Raspbian 三款系统）"
-read -p "请输入 y or n（默认 yes):" selected
-while true; do
-    case ${selected} in
-        ''|yes|y|YES|Y|Yes )
-            apt_sources=true
-            break;
-            ;;
-        no|n|NO|N|No)
-            apt_sources=false
-            break;
-            ;;
-        *)
-            echo "输入错误，请重新输入。"
-            ;;
-    esac
-done
-check_massage+=(" # ${title_num}. 是否将系统源切换为中科大(USTC)源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
-let title_num++
+#### 排除 ubuntu 18.10 for ARM
+
+if [[ ${release} == "ubuntu" ]] && [[ ${systemCodename} == "Cosmic" ]] && grep -i -q 'arm' /proc/cpuinfo ; then
+    echo -e "${yellow}目前 ARM Ubuntu 18.10 许多国内源不支持,建议安装 ubuntu 18.04 系统，代号 Bionic，跳过源切换选择${plain}"
+    apt_sources=false
+else
+    echo -e "(${title_num}). 是否将系统源切换为中科大(USTC)源（目前支持 Debian Ubuntu Raspbian 三款系统）"
+    read -p "请输入 y or n（默认 yes):" selected
+    while true; do
+        case ${selected} in
+            ''|yes|y|YES|Y|Yes )
+                apt_sources=true
+                break;
+                ;;
+            no|n|NO|N|No)
+                apt_sources=false
+                break;
+                ;;
+            *)
+                echo "输入错误，请重新输入。"
+                ;;
+        esac
+    done
+    check_massage+=(" # ${title_num}. 是否将系统源切换为中科大(USTC)源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
+    let title_num++
+fi
 
 ### 2. 是否将用户添加至 docker 用户组
 echo ''
@@ -377,7 +389,7 @@ let title_num++
 echo ''
 echo ''
 while true;do
-    echo -e "(${title_num}).是否需要设置 hassio 数据保j存路径（默认：/usr/share/hassio）"
+    echo -e "(${title_num}).是否需要设置 hassio 数据保存路径（默认：/usr/share/hassio）"
     read -p "请输入 yes 或 no (默认：no）:" selected
     case ${selected} in
         Yes|YES|yes|y|Y)
@@ -418,6 +430,7 @@ read selected
 ## 检查系统版本
 check_sys
 
+
 ## 切换安装源
 if  [[ ${apt_sources} == true ]]; then
 	echo -e "${yellow}[info]: 切换系统网络源.....${plain}"
@@ -437,7 +450,14 @@ apt_install ${Ubunt_Debian_Requirements}
 ## 安装 Docker 引擎
 if ! command -v docker;then
     echo -e "${yellow}[info]: 安装 Docker 引擎.....${plain}"
-    docker_install
+    if [[ ${systemCodename} == "cosmic" ]]; then
+        echo -e "${yellow}[info]: 发现你系统为 Ubuntu 18.10(cosmic) 该系统 docker 官方并不推荐使用，建议安装 Ubuntu 18.04.....${plain}"
+        echo -e "${yellow}[info]: 您可以输入任意键继续从源安装兼容 Ubuntu 18.16 的 docker，或选择 Ctrl+C 结束安装。"
+        read 
+        ubuntu_18_10_docker_install
+    else
+        docker_install
+    fi
 else
     echo -e "${yellow}[info]: 发现系统已安装 docker，跳过 docker 安装${plain}"
 fi
