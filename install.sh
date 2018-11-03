@@ -2,7 +2,7 @@
 
 # Author : neroxps
 # Email : neroxps@gmail.com
-# Version : 3.0
+# Version : 3.1
 # Date : 2018-10-27
 
 # 颜色
