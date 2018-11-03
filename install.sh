@@ -22,7 +22,7 @@ users_num=${#users[*]}
 title_num=1
 check_massage=()
 
-## 检查系统架构以区 machine
+## 检查系统架构以区分 machine
 if [[ $(getconf LONG_BIT) == "64" ]]; then
     machine_map=(raspberrypi3-64 qemuarm-64 qemux86-64)
     default_machine="qemux86-64"
@@ -100,21 +100,19 @@ download_file(){
 ## 切换安装源
 replace_source(){
     if [[ -z ${systemCodename} ]]; then
-        echo "${red}[ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考中科大源使用方法：http://mirrors.ustc.edu.cn/help/${plain}" 
-        exit 1
+        error_exit "[ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考中科大源使用方法：http://mirrors.ustc.edu.cn/help/"
     fi
     [[ ! -f /etc/apt/sources.list.bak ]] && echo "${yellow}备份系统原来源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
     if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
-        [[ -f /etc/apt/sources.list.d/armbian.list ]] && echo "${yellow}发现 armbian 源，armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}" && mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
+        [[ -f /etc/apt/sources.list.d/armbian.list ]] && echo "${yellow}发现 armbian 源，重命名armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}" && mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
         download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
     elif [[  ${release} == "raspbian" ]]; then
         echo "deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/debian/ ${systemCodename} main ui" > /etc/apt/sources.list
     fi
     apt update
     if [[ $? -ne 0 ]]; then
-        echo -e "${red}[ERROR]: 系统源切换错误，请检查网络连接是否正常，脚本退出${plain}"
         mv /etc/apt/sources.list.bak /etc/apt/sources.list
-        exit 1
+        error_exit "[ERROR]: 系统源切换错误，请检查网络连接是否正常，脚本退出"
     fi
 }
 
@@ -123,8 +121,7 @@ update_system(){
     if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
         apt upgrade -y
         if [[ $? != 0 ]]; then
-            echo -e "${red}[ERROR]: 系统更新失败，脚本退出。${plain}"
-            exit 1
+            error_exit "[ERROR]: 系统更新失败，脚本退出。"
         fi
         echo -e "${green}[info]: 系统更新成功。${plain}"
     fi
@@ -144,9 +141,7 @@ docker_install(){
     chmod u+x get-docker.sh
     ./get-docker.sh --mirror Aliyun
     if ! systemctl status docker > /dev/null 2>&1 ;then
-        echo -e "${red}[ERROR]: Docker 安装失败，请检查上方安装错误信息。${plain}"
-        echo -e "${red}你也可以选择通过搜索引擎，搜索你系统安装docker的方法，安装后重新执行脚本。${plain}"
-        exit 1
+        error_exit "${red}[ERROR]: Docker 安装失败，请检查上方安装错误信息。 你也可以选择通过搜索引擎，搜索你系统安装docker的方法，安装后重新执行脚本。"
     else
         echo -e "${green}[info]: Docker 安装成功。${plain}"
     fi
@@ -160,8 +155,7 @@ docker_install(){
 apt_install(){
     apt install -y ${*}
     if [[ $? -ne 0 ]];then
-        echo -e "${red}[ERROR]: 安装${1}失败，请将检查上方安装错误信息。${plain}"
-        exit 1
+        error_exit "${red}[ERROR]: 安装${1}失败，请将检查上方安装错误信息。${plain}"
     fi
 }
 
@@ -230,9 +224,7 @@ EOF
     fi
     
     if ! systemctl status hassio-supervisor > /dev/null ; then
-        echo -e "${red}安装 hassio 失败，请将上方安装信息发送到论坛询问。${plain}"
-        echo -e "${red}脚本退出...${plain}"
-        exit 1
+        error_exit "安装 hassio 失败，请将上方安装信息发送到论坛询问。脚本退出..."
     else
         echo -e "${green} hassio 安装完成，请输入你的 http://ip:8123 访问${plain}"
     fi
@@ -242,6 +234,19 @@ ubuntu_18_10_docker_install(){
     apt install docker.io -y
 }
 
+error_exit(){
+    echo -e "${red}"
+    echo "########################### System version ###########################"
+    lsb_release -a 2>/dev/null
+    echo "########################### System version 2 ###########################"
+    cat /proc/version
+    echo "########################### System info ###########################"
+    uname -a
+    echo "########################### END ###########################"
+    echo "${1}"
+    echo "${plain}"
+    exit 1
+}
 
 # Main
 
@@ -452,7 +457,7 @@ if ! command -v docker;then
     echo -e "${yellow}[info]: 安装 Docker 引擎.....${plain}"
     if [[ ${systemCodename} == "cosmic" ]]; then
         echo -e "${yellow}[info]: 发现你系统为 Ubuntu 18.10(cosmic) 该系统 docker 官方并不推荐使用，建议安装 Ubuntu 18.04.....${plain}"
-        echo -e "${yellow}[info]: 您可以输入任意键继续从源安装兼容 Ubuntu 18.16 的 docker，或选择 Ctrl+C 结束安装。"
+        echo -e "${yellow}[info]: 您可以输入任意键继续从源安装兼容 Ubuntu 18.16 的 docker，或选择 Ctrl+C 结束安装。${plain}"
         read 
         ubuntu_18_10_docker_install
     else
