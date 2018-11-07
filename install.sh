@@ -39,9 +39,6 @@ machine_num=${#machine_map[*]}
 
 ## 这个方法抄袭自 https://github.com/teddysun/shadowsocks_install
 check_sys(){
-    local checkType=$1
-    local value=$2
-
     if [[ -f /etc/redhat-release ]]; then
         release="centos"
         systemPackage="yum"
