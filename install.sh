@@ -256,12 +256,15 @@ if [[ $USER != "root" ]];then
     exit 1
 fi
 
+## 检查系统版本
+check_sys
+
 ## 配置安装选项
 ### 1. 配置安装源
-#### 排除 ubuntu 18.10 for ARM
+#### 排除 ubuntu for ARM
 
-if [[ ${release} == "ubuntu" ]] && [[ ${systemCodename} == "Cosmic" ]] && grep -i -q 'arm' /proc/cpuinfo ; then
-    echo -e "${yellow}目前 ARM Ubuntu 18.10 许多国内源不支持,建议安装 ubuntu 18.04 系统，代号 Bionic，跳过源切换选择${plain}"
+if [[ ${release} == "ubuntu" ]] && grep -i -q 'arm' /proc/cpuinfo ; then
+    echo -e "${yellow}目前 ARM Ubuntu 国内源不支持,建议安装 debian 系统，跳过源切换选择${plain}"
     apt_sources=false
 else
     echo -e "(${title_num}). 是否将系统源切换为中科大(USTC)源（目前支持 Debian Ubuntu Raspbian 三款系统）"
@@ -431,10 +434,6 @@ echo " #########################################################################
 echo "请确认以上信息，继续请按任意键，如需修改请输入 Ctrl+C 结束任务重新执行脚本。"
 
 read selected
-
-## 检查系统版本
-check_sys
-
 
 ## 切换安装源
 if  [[ ${apt_sources} == true ]]; then
