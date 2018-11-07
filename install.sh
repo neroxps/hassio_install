@@ -60,7 +60,7 @@ check_sys(){
         release="debian"
         systemPackage="apt"
         systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
-    elif grep -Eqi "raspbian" /proc/version; then
+    elif lsb_release -a 2>/dev/null | grep -Eqi "raspbian"; then
         release="raspbian"
         systemPackage="apt"
         systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
