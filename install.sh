@@ -99,7 +99,7 @@ replace_source(){
     if [[ -z ${systemCodename} ]]; then
         error_exit "[ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考中科大源使用方法：http://mirrors.ustc.edu.cn/help/"
     fi
-    [[ ! -f /etc/apt/sources.list.bak ]] && echo "${yellow}备份系统源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
+    [[ ! -f /etc/apt/sources.list.bak ]] && echo -e "${yellow}备份系统源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
 
     case $(uname -m) in
         "x86_64" | "i686" | "i386" )
@@ -108,7 +108,10 @@ replace_source(){
             fi
             ;;
         "arm" | "armv7l" | "armv6l" | "aarch64" | "armhf" | "arm64" | "ppc64el")
-            [[ -f /etc/apt/sources.list.d/armbian.list ]] && echo "${yellow}发现 armbian 源，重命名armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}" && mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
+            if [[ -f /etc/apt/sources.list.d/armbian.list ]] ;then
+                echo -e "${yellow}发现 armbian 源，重命名armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}"
+                mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
+            fi
             if [[ ${release} == "debian" ]]; then
                 download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
             elif [[  ${release} == "raspbian" ]]; then
@@ -120,6 +123,7 @@ replace_source(){
                 echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-backports main restricted universe multiverse" >> /etc/apt/sources.list
                 echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-security main restricted universe multiverse" >> /etc/apt/sources.list
             fi
+            ;;
         *)  error_exit "[ERROR]: 由于无法获取系统架构，故此无法切换系统源，请跳过系统源切换。"
             ;;
     esac
@@ -240,8 +244,6 @@ EOF
     
     if ! systemctl status hassio-supervisor > /dev/null ; then
         error_exit "安装 hassio 失败，请将上方安装信息发送到论坛询问。脚本退出..."
-    else
-        echo -e "${green} hassio 安装完成，请输入你的 http://ip:8123 访问${plain}"
     fi
 }
 
@@ -261,6 +263,20 @@ error_exit(){
     echo "${1}"
     echo -e "${plain}"
     exit 1
+}
+
+wait_homeassistant_run(){
+    printf "等待 homeassistant 启动"
+    for ((i=0;i<=300;i++));do
+        if netstat -napt |grep 8123 > /dev/null ;then 
+            printf "done\n"
+            return 0
+        fi
+        sleep 1 
+        printf "."
+    done
+    printf "fail\n"
+    return 1
 }
 
 # Main
@@ -486,3 +502,15 @@ fi
 ## 安装 hassio
 echo -e "${yellow}[info]: 安装 hassio......${plain}"
 hassio_install
+if wait_homeassistant_run ;then
+    echo -e "${green} hassio 安装完成，请输入你的 http://ip:8123 访问${plain}"
+else
+    echo "########################### Docker ps ###########################"
+    docker ps
+    echo "########################### hassio log ###########################"
+    docker logs hassio_supervisor
+    echo "########################### homeassistant log ###########################"
+    docker logs homeassistant
+    echo "########################### END ###########################"
+    echo -e "${red} homeassistant 启动超时，请检查上方日志....${plain}"
+fi
