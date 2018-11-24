@@ -42,6 +42,10 @@ check_sys(){
     if [[ -f /etc/redhat-release ]]; then
         release="centos"
         systemPackage="yum"
+    elif lsb_release -a 2>/dev/null | grep -Eqi "raspbian"; then
+        release="raspbian"
+        systemPackage="apt"
+        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
     elif grep -Eqi "debian" /etc/issue; then
         release="debian"
         systemPackage="apt"
@@ -55,10 +59,6 @@ check_sys(){
         systemPackage="yum"
     elif grep -Eqi "debian" /proc/version; then
         release="debian"
-        systemPackage="apt"
-        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
-    elif lsb_release -a 2>/dev/null | grep -Eqi "raspbian"; then
-        release="raspbian"
         systemPackage="apt"
         systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
     elif grep -Eqi "ubuntu" /proc/version; then
@@ -99,13 +99,29 @@ replace_source(){
     if [[ -z ${systemCodename} ]]; then
         error_exit "[ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考中科大源使用方法：http://mirrors.ustc.edu.cn/help/"
     fi
-    [[ ! -f /etc/apt/sources.list.bak ]] && echo "${yellow}备份系统原来源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
-    if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
-        [[ -f /etc/apt/sources.list.d/armbian.list ]] && echo "${yellow}发现 armbian 源，重命名armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}" && mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
-        download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
-    elif [[  ${release} == "raspbian" ]]; then
-        echo "deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/debian/ ${systemCodename} main ui" > /etc/apt/sources.list
-    fi
+    [[ ! -f /etc/apt/sources.list.bak ]] && echo "${yellow}备份系统源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
+
+    case $(uname -m) in
+        "x86_64" | "i686" | "i386" )
+            if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
+                download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
+            fi
+            ;;
+        "arm" | "armv7l" | "armv6l" | "aarch64" | "armhf" | "arm64" | "ppc64el")
+            if [[ ${release} == "debian" ]]; then
+                download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
+            elif [[  ${release} == "raspbian" ]]; then
+                echo "deb http://mirrors.ustc.edu.cn/raspbian/raspbian/ ${systemCodename} main contrib non-free rpi" > /etc/apt/sources.list
+                echo "deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/debian/ ${systemCodename} main ui" >> /etc/apt/sources.list
+            elif [[ ${release} == "ubuntu" ]]; then
+                echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename} main restricted universe multiverse" > /etc/apt/sources.list
+                echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-updates main restricted universe multiverse" >> /etc/apt/sources.list
+                echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-backports main restricted universe multiverse" >> /etc/apt/sources.list
+                echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-security main restricted universe multiverse" >> /etc/apt/sources.list
+            fi
+            ;;
+    esac
+
     apt update
     if [[ $? -ne 0 ]]; then
         mv /etc/apt/sources.list.bak /etc/apt/sources.list
@@ -159,9 +175,9 @@ apt_install(){
 
 ## 修改 docker 源
 change_docker_registry(){
-	if [ ! -d /etc/docker ];then
-	    mkdir -p /etc/docker
-	fi
+    if [ ! -d /etc/docker ];then
+        mkdir -p /etc/docker
+    fi
 cat << EOF > /etc/docker/daemon.json 
 { 
     "registry-mirrors": [ 
@@ -169,26 +185,26 @@ cat << EOF > /etc/docker/daemon.json
     ] 
 } 
 EOF
-	systemctl daemon-reload
-	systemctl restart docker > /dev/null
-	echo -e "${green}[info]: 切换国内源完成${plain}"
+    systemctl daemon-reload
+    systemctl restart docker > /dev/null
+    echo -e "${green}[info]: 切换国内源完成${plain}"
 }
 
 ## hassio 安装
 hassio_install(){
-	local i=10
-	while true;do
-		stable_json=$(curl -Ls https://raw.githubusercontent.com/neroxps/qemux86-64-homeassistant/master/stable.json)
-		if [[ ! -z ${stable_json} ]]; then
-			break;
-		fi
-		if [[ $i -eq 0 ]]; then
-			echo -e "${red}[ERROR]: 获取 hassio 版本号失败，请检查你系统网络与 https://raw.githubusercontent.com 的连接是否正常。${plain}"
-		fi
-		let i--
-	done
-	hassio_version=$(echo ${stable_json} |jq -r '.supervisor')
-	homeassistant_version=$(echo ${stable_json} |jq -r '.homeassistant.default')
+    local i=10
+    while true;do
+        stable_json=$(curl -Ls https://raw.githubusercontent.com/neroxps/qemux86-64-homeassistant/master/stable.json)
+        if [[ ! -z ${stable_json} ]]; then
+            break;
+        fi
+        if [[ $i -eq 0 ]]; then
+            echo -e "${red}[ERROR]: 获取 hassio 版本号失败，请检查你系统网络与 https://raw.githubusercontent.com 的连接是否正常。${plain}"
+        fi
+        let i--
+    done
+    hassio_version=$(echo ${stable_json} |jq -r '.supervisor')
+    homeassistant_version=$(echo ${stable_json} |jq -r '.homeassistant.default')
     if [ -z ${hassio_version} ] || [ -z ${homeassistant_version} ];then
         echo -e "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 https://raw.githubusercontent.com 连接是否畅通。${plain}"
         echo -e "${red}脚本退出...${plain}"
@@ -241,7 +257,7 @@ error_exit(){
     uname -a
     echo "########################### END ###########################"
     echo "${1}"
-    echo "${plain}"
+    echo -e "${plain}"
     exit 1
 }
 
@@ -258,32 +274,26 @@ check_sys
 
 ## 配置安装选项
 ### 1. 配置安装源
-#### 排除 ubuntu for ARM
 
-if [[ ${release} == "ubuntu" ]] && grep -i -q 'arm' /proc/cpuinfo ; then
-    echo -e "${yellow}目前 ARM Ubuntu 国内源不支持,建议安装 debian 系统，跳过源切换选择${plain}"
-    apt_sources=false
-else
-    echo -e "(${title_num}). 是否将系统源切换为中科大(USTC)源（目前支持 Debian Ubuntu Raspbian 三款系统）"
-    read -p "请输入 y or n（默认 yes):" selected
-    while true; do
-        case ${selected} in
-            ''|yes|y|YES|Y|Yes )
-                apt_sources=true
-                break;
-                ;;
-            no|n|NO|N|No)
-                apt_sources=false
-                break;
-                ;;
-            *)
-                echo "输入错误，请重新输入。"
-                ;;
-        esac
-    done
-    check_massage+=(" # ${title_num}. 是否将系统源切换为中科大(USTC)源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
-    let title_num++
-fi
+echo -e "(${title_num}). 是否将系统源切换为中科大(USTC)源（目前支持 Debian Ubuntu Raspbian 三款系统）"
+read -p "请输入 y or n（默认 yes):" selected
+while true; do
+    case ${selected} in
+        ''|yes|y|YES|Y|Yes )
+            apt_sources=true
+            break;
+            ;;
+        no|n|NO|N|No)
+            apt_sources=false
+            break;
+            ;;
+        *)
+            echo "输入错误，请重新输入。"
+            ;;
+    esac
+done
+check_massage+=(" # ${title_num}. 是否将系统源切换为中科大(USTC)源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
+let title_num++
 
 ### 2. 是否将用户添加至 docker 用户组
 echo ''
@@ -434,8 +444,8 @@ read selected
 
 ## 切换安装源
 if  [[ ${apt_sources} == true ]]; then
-	echo -e "${yellow}[info]: 切换系统网络源.....${plain}"
-	replace_source
+    echo -e "${yellow}[info]: 切换系统网络源.....${plain}"
+    replace_source
 else
     echo -e "${yellow}[info]: 跳过切换系统源。${plain}"
 fi
@@ -465,10 +475,10 @@ fi
 
 ## 切换 Docker 源为国内源
 if [[ ${CDR} == true ]]; then
-	echo -e "${yellow}[info]: 切换 Docker 源为国内源....${plain}"
-	change_docker_registry
+    echo -e "${yellow}[info]: 切换 Docker 源为国内源....${plain}"
+    change_docker_registry
 else
-	echo -e "${yellow}[info]: 跳过切换 Docker 源....${plain}"
+    echo -e "${yellow}[info]: 跳过切换 Docker 源....${plain}"
 fi
 
 ## 安装 hassio
