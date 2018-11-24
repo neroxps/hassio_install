@@ -505,8 +505,10 @@ hassio_install
 if wait_homeassistant_run ;then
     echo -e "${green} hassio 安装完成，请输入你的 http://ip:8123 访问${plain}"
 else
+    echo "########################### Docker images ###########################"
+    docker images
     echo "########################### Docker ps ###########################"
-    docker ps
+    docker ps -a
     echo "########################### hassio log ###########################"
     docker logs hassio_supervisor
     echo "########################### homeassistant log ###########################"
