@@ -137,7 +137,7 @@ replace_source(){
 
 ## 更新系统
 update_system(){
-    if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
+    if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]] || [[ ${release} == "raspbian" ]]; then
         apt upgrade -y
         if [[ $? != 0 ]]; then
             error_exit "[ERROR]: 系统更新失败，脚本退出。"
