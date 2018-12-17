@@ -227,8 +227,8 @@ hassio_install(){
         echo -e "${red}[ERROR]: 从 docker 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，请检查上方失败信息。${plain}"
         exit 1
     fi
-    mkdir -p /usr/share/hassio/
-cat << EOF > /usr/share/hassio/updater.json
+    mkdir -p ${data_share_path}
+cat << EOF > ${data_share_path}/updater.json
 {
   "channel": "stable",
   "hassio": "${hassio_version}",
@@ -236,11 +236,7 @@ cat << EOF > /usr/share/hassio/updater.json
 }
 EOF
     echo -e "${yellow}开始 hassio 安装流程。(如出现 [Warning] 请忽略，无须理会)${plain}"
-    if [[ -z ${data_share_path} ]]; then
-        ./hassio_install.sh -m ${machine}
-    else
-        ./hassio_install.sh -m ${machine} --data-share ${data_share_path}
-    fi
+    ./hassio_install.sh -m ${machine} --data-share ${data_share_path}
     
     if ! systemctl status hassio-supervisor > /dev/null ; then
         error_exit "安装 hassio 失败，请将上方安装信息发送到论坛询问。脚本退出..."
@@ -444,6 +440,7 @@ while true;do
             ;;
         ''|No|NO|no|n|N)
             echo -e "hassio 数据路径为默认路径: /usr/share/hassio"
+            data_share_path="/usr/share/hassio"
             break;
             ;;
         *)
@@ -451,7 +448,7 @@ while true;do
             ;;
     esac
 done
-check_massage+=(" # ${title_num}. 您的 hassio 数据路径为:           ${yellow}$([[ -z ${data_share_path} ]] && echo '/usr/share/hassio' || echo ${data_share_path})${plain}")
+check_massage+=(" # ${title_num}. 您的 hassio 数据路径为:           ${yellow}${data_share_path}${plain}")
 
 echo " ################################################################################"
 for (( i = 0; i < ${#check_massage[@]}; i++ )); do echo -e "${check_massage[$i]}"; done 
