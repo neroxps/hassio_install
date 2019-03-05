@@ -466,8 +466,8 @@ else
 fi
 
 ## 更新系统至最新
-echo -e "${yellow}[info]: 更新系统至最新.....${plain}"
-update_system
+ # echo -e "${yellow}[info]: 更新系统至最新.....${plain}"
+ # update_system
 
 ## 定义 Ubuntu 和 Debian 依赖
 echo -e "${yellow}[info]: 安装 hassio 必要依赖.....${plain}"
