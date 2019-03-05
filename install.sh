@@ -290,8 +290,8 @@ check_sys
 ### 1. 配置安装源
 
 echo -e "(${title_num}). 是否将系统源切换为中科大(USTC)源（目前支持 Debian Ubuntu Raspbian 三款系统）"
-read -p "请输入 y or n（默认 yes):" selected
 while true; do
+    read -p "请输入 y or n（默认 yes):" selected
     case ${selected} in
         ''|yes|y|YES|Y|Yes )
             apt_sources=true
