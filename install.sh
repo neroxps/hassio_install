@@ -187,9 +187,9 @@ change_docker_registry(){
 cat << EOF > /etc/docker/daemon.json 
 { 
     "registry-mirrors": [ 
-    "https://registry.docker-cn.com" 
-    ] 
-} 
+    "${docker_registry_mirrors_url}" 
+    ]
+}
 EOF
     systemctl daemon-reload
     systemctl restart docker > /dev/null
@@ -371,6 +371,26 @@ while true; do
     case ${selected} in
         ''|Yes|YES|yes|y|Y)
                 CDR=true
+                echo ''
+                while true; do
+                    echo -e "1. docker-cn （docker 官方中国镜像源，阿里云提供服务，但流量大可能会卡）"
+                    echo -e "2. 七牛云 docker 镜像源"
+                    read -p '请选择 docker 加速器（默认：七牛云）：' selected
+                    case ${selected} in
+                        1)
+                            docker_registry_mirrors_url="https://registry.docker-cn.com"
+                            chack_massage_text='docker-cn'
+                            break;
+                            ;;
+                        ''|2)
+                            docker_registry_mirrors_url="https://reg-mirror.qiniu.com"
+                            chack_massage_text='七牛云'
+                            break;
+                            ;;
+                        *)
+                            echo -e "输入错误，请重新输入。"
+                    esac
+                done
                 break;
             ;;
         No|NO|no|n|N)
@@ -381,7 +401,7 @@ while true; do
                 echo -e "输入错误，请重新输入。"
     esac
 done
-check_massage+=(" # ${title_num}. 是否将 Docker 源切换至国内源:     ${yellow}$(if ${CDR};then echo "是"; else echo "否";fi)${plain}")
+check_massage+=(" # ${title_num}. 是否将 Docker 源切换至国内源:     ${yellow}$(if ${CDR};then echo "是，切换源选择：${chack_massage_text}"; else echo "否";fi)${plain}")
 let title_num++
 
 ### 4. 选择设备类型，用于选择 hassio 拉取 homeassistant 容器之用。
