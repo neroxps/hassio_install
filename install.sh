@@ -206,6 +206,7 @@ hassio_install(){
         fi
         if [[ $i -eq 0 ]]; then
             echo -e "${red}[ERROR]: 获取 hassio 版本号失败，请检查你系统网络与 https://raw.githubusercontent.com 的连接是否正常。${plain}"
+            exit 1
         fi
         let i--
     done
