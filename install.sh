@@ -217,7 +217,7 @@ hassio_install(){
         echo -e "${red}脚本退出...${plain}"
         exit 1
     fi
-    download_file 'https://raw.githubusercontent.com/home-assistant/hassio-build/master/install/hassio_install' 'hassio_install.sh'
+    download_file 'https://raw.githubusercontent.com/home-assistant/hassio-installer/master/hassio_install.sh' 'hassio_install.sh'
     chmod u+x hassio_install.sh
     sed -i "s/HASSIO_VERSION=.*/HASSIO_VERSION=${hassio_version}/g" ./hassio_install.sh
     echo -e "${yellow}从 hub.docker.com 下载 homeassistant/${machine}-homeassistant:${homeassistant_version}......${plain}"
