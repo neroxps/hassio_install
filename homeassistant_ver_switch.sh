@@ -93,6 +93,7 @@ echo ''
 
 # 还原配置流程
 echo '还原配置目录后重启 homeassistant....'
+mv "${homeassistant_config_path}" "/tmp/"
 mv ${homeassistant_config_backup_path} ${homeassistant_config_path}
 docker restart homeassistant
 printf "等待 homeassistant 启动"
