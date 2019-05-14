@@ -118,3 +118,23 @@ wget https://raw.githubusercontent.com/neroxps/hassio_install/master/hassio_upgr
 chmod u+x hassio_upgrade.sh
 ./hassio_upgrade.sh
 ```
+
+# Homeassistant 版本切换脚本
+
+此脚本可在宿主中切换homeassistant版本号
+
+## 严重警告
+1. 切换版本的 home-assistant 请先备份好配置文件，虽然脚本会自动备份，但最好自己再备份一次，出现丢失配置情况恕不负责。
+2. 切换旧版本启动失败的，请查看 home-assistant 的日志来修复错误配置
+3. 切换过旧的版本会导致 hassio 加载 404，目前已知 0.77 以前版本都无法正常加载 hassio
+4. 启动失败可以到论坛带日志发帖求助，无日志发帖我将会扣分处理
+
+## 使用方法
+
+使用 root 运行一下命令
+
+```
+wget https://raw.githubusercontent.com/neroxps/hassio_install/master/homeassistant_ver_switch.sh
+chmod u+x homeassistant_ver_switch.sh
+./homeassistant_ver_switch.sh 0.92.2
+```
