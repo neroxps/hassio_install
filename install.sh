@@ -376,6 +376,7 @@ while true; do
                 while true; do
                     echo -e "1. docker-cn （docker 官方中国镜像源，阿里云提供服务，但流量大可能会卡）"
                     echo -e "2. 七牛云 docker 镜像源"
+                    echo -e "3. 163 docker 镜像源（无 SSL）"
                     read -p '请选择 docker 加速器（默认：七牛云）：' selected
                     case ${selected} in
                         1)
@@ -386,6 +387,11 @@ while true; do
                         ''|2)
                             docker_registry_mirrors_url="https://reg-mirror.qiniu.com"
                             chack_massage_text='七牛云'
+                            break;
+                            ;;
+                        3)
+                            docker_registry_mirrors_url="http://hub-mirror.c.163.com"
+                            chack_massage_text='163源'
                             break;
                             ;;
                         *)
