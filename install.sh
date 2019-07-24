@@ -160,7 +160,7 @@ docker_install(){
     chmod u+x get-docker.sh
     ./get-docker.sh --mirror AzureChinaCloud
     if ! systemctl status docker > /dev/null 2>&1 ;then
-        error_exit "${red}[ERROR]: Docker 安装失败，请检查上方安装错误信息。 你也可以选择通过搜索引擎，搜索你系统安装docker的方法，安装后重新执行脚本。"
+        error_exit "${red}[ERROR]: Docker 安装失败，请检查上方安装错误信息。 你也可以选择通过搜索引擎，搜索你系统安装docker的方法，安装后重新执行脚本。${plain}"
     else
         echo -e "${green}[info]: Docker 安装成功。${plain}"
     fi
