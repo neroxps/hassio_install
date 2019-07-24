@@ -158,7 +158,7 @@ docker_install(){
     download_file 'https://raw.githubusercontent.com/docker/docker-install/master/install.sh' 'get-docker.sh'
     sed -i 's/DEFAULT_CHANNEL_VALUE="test"/DEFAULT_CHANNEL_VALUE="edge"/' get-docker.sh
     chmod u+x get-docker.sh
-    ./get-docker.sh --mirror Aliyun
+    ./get-docker.sh --mirror AzureChinaCloud
     if ! systemctl status docker > /dev/null 2>&1 ;then
         error_exit "${red}[ERROR]: Docker 安装失败，请检查上方安装错误信息。 你也可以选择通过搜索引擎，搜索你系统安装docker的方法，安装后重新执行脚本。"
     else
