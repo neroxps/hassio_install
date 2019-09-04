@@ -24,17 +24,18 @@ check_massage=()
 
 ## 检查系统架构以区分 machine
 if [[ $(getconf LONG_BIT) == "64" ]]; then
-    machine_map=(raspberrypi3-64 qemuarm-64 qemux86-64)
+    machine_map=(intel-nuc odroid-c2 odroid-xu rangepi-prime qemuarm-64 qemux86-64 raspberrypi raspberrypi3-64 raspberrypi4-64 tinker)
     default_machine="qemux86-64"
 elif [[ $(getconf LONG_BIT) == "32" ]]; then
     machine_map=(intel-nuc odroid-c2 odroid-xu orangepi-prime qemuarm qemux86 raspberrypi raspberrypi2 raspberrypi3 raspberrypi4 tinker)
     default_machine="qemux86"
 else
-    machine_map=(intel-nuc odroid-c2 odroid-xu rangepi-prime qemuarm-64 qemux86-64 raspberrypi raspberrypi3-64 raspberrypi4-64 tinker)
+    machine_map=(intel-nuc odroid-c2 odroid-xu orangepi-prime qemuarm qemuarm-64 qemux86 qemux86-64 raspberrypi raspberrypi2 raspberrypi3 raspberrypi4 raspberrypi3-64 raspberrypi4-64 tinker)
     default_machine="qemux86-64"
 fi
 machine_num=${#machine_map[*]}
 
+echo ${machine_map[*]}
 # Function
 
 ## 这个方法抄袭自 https://github.com/teddysun/shadowsocks_install
