@@ -27,10 +27,10 @@ if [[ $(getconf LONG_BIT) == "64" ]]; then
     machine_map=(raspberrypi3-64 qemuarm-64 qemux86-64)
     default_machine="qemux86-64"
 elif [[ $(getconf LONG_BIT) == "32" ]]; then
-    machine_map=(raspberrypi raspberrypi2 raspberrypi3 qemuarm qemux86 intel-nuc)
+    machine_map=(intel-nuc odroid-c2 odroid-xu orangepi-prime qemuarm qemux86 raspberrypi raspberrypi2 raspberrypi3 raspberrypi4 tinker)
     default_machine="qemux86"
 else
-    machine_map=(raspberrypi raspberrypi2 raspberrypi3 qemuarm qemux86 intel-nuc raspberrypi3-64 qemuarm-64 qemux86-64)
+    machine_map=(intel-nuc odroid-c2 odroid-xu rangepi-prime qemuarm-64 qemux86-64 raspberrypi raspberrypi3-64 raspberrypi4-64 tinker)
     default_machine="qemux86-64"
 fi
 machine_num=${#machine_map[*]}
