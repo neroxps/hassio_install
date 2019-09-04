@@ -236,7 +236,8 @@ cat << EOF > ${data_share_path}/updater.json
 {
   "channel": "stable",
   "hassio": "${hassio_version}",
-  "homeassistant": "${homeassistant_version}"
+  "homeassistant": "${homeassistant_version}",
+  "dns":"1"
 }
 EOF
     echo -e "${yellow}开始 hassio 安装流程。(如出现 [Warning] 请忽略，无须理会)${plain}"
@@ -253,6 +254,7 @@ ubuntu_18_10_docker_install(){
 
 error_exit(){
     echo -e "${red}"
+    echo "################# 发到论坛时，请把上方日志也一并粘贴发送 ################"
     echo "########################### System version ###########################"
     lsb_release -a 2>/dev/null
     echo "########################### System version 2 ###########################"
@@ -539,5 +541,5 @@ else
     echo "########################### homeassistant log ###########################"
     docker logs homeassistant
     echo "########################### END ###########################"
-    echo -e "${red} homeassistant 启动超时，请检查上方日志....${plain}"
+    echo -e "${red} homeassistant 启动超时，请检查上方日志....或者重启操作系统${plain}"
 fi
