@@ -24,18 +24,20 @@ check_massage=()
 
 ## 检查系统架构以区分 machine
 if [[ $(getconf LONG_BIT) == "64" ]]; then
-    machine_map=(intel-nuc odroid-c2 odroid-xu rangepi-prime qemuarm-64 qemux86-64 raspberrypi raspberrypi3-64 raspberrypi4-64 tinker)
+    machine_map=(intel-nuc odroid-c2 odroid-xu rangepi-prime qemuarm-64 qemux86-64 raspberrypi3-64 raspberrypi4-64 tinker)
+    machine_info=("英特尔的nuc小主机" "韩国odroid-c2" "韩国odroid-xu" "香橙派" "通用arm设备（例如斐讯N1) 64位系统" "通用X86（普通的PC机电脑）64位系统" "树莓派三代64位系统" "树莓派四代64位系统" "华硕tinker")
     default_machine="qemux86-64"
 elif [[ $(getconf LONG_BIT) == "32" ]]; then
     machine_map=(intel-nuc odroid-c2 odroid-xu orangepi-prime qemuarm qemux86 raspberrypi raspberrypi2 raspberrypi3 raspberrypi4 tinker)
+    machine_info=("英特尔的nuc小主机" "韩国odroid-c2" "韩国odroid-xu" "香橙派" "通用arm设备（例如斐讯N1)" "通用X86（普通的PC机电脑）" "树莓派一代" "树莓派二代" "树莓派三代" "树莓派四代" "华硕tinker")
     default_machine="qemux86"
 else
     machine_map=(intel-nuc odroid-c2 odroid-xu orangepi-prime qemuarm qemuarm-64 qemux86 qemux86-64 raspberrypi raspberrypi2 raspberrypi3 raspberrypi4 raspberrypi3-64 raspberrypi4-64 tinker)
+    machine_info=("英特尔的nuc小主机" "韩国odroid-c2" "韩国odroid-xu" "香橙派" "通用arm设备（例如斐讯N1)" "通用arm设备（例如斐讯N1) 64位系统" "通用X86 64位系统（普通的PC机电脑）" "通用X86（普通的PC机电脑）64位系统" "树莓派一代" "树莓派二代" "树莓派三代" "树莓派四代" "树莓派三代64位系统" "树莓派四代64位系统" "华硕tinker")
     default_machine="qemux86-64"
 fi
 machine_num=${#machine_map[*]}
 
-echo ${machine_map[*]}
 # Function
 
 ## 这个方法抄袭自 https://github.com/teddysun/shadowsocks_install
@@ -416,11 +418,9 @@ let title_num++
 echo ''
 echo ''
 while true;do
-    i=1
     echo -e "(${title_num}).请选择你设备类型（默认：${default_machine}）"
-    for name in ${machine_map[@]}; do
-        echo -e "    [${i}]: ${name}"
-        let i++
+    for (( i = 0; i < ${machine_num}; i++ )); do
+        echo -e "    [$[${i}+1]]: ${machine_map[$i]}: ${machine_info[$i]}"
     done
     read -p "输入数字 (1-${machine_num}):" selected
     case ${selected} in
