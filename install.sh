@@ -426,10 +426,14 @@ while true;do
     done
     read -p "输入数字 (1-${machine_num}):" selected
     case ${selected} in
-        [1-"${machine_num}"])
-            machine="${machine_map[((${selected}-1))]}"
-            echo -e "你选择了 ${machine}"
-            break;
+        *[0-9]*)
+            if [[ ${selected} -le ${machine_num} && ${selected} -gt 0 ]]; then
+                machine="${machine_map[((${selected}-1))]}"
+                echo -e "你选择了 ${machine}"
+                break;
+            else
+                echo -e "输入错误，请重新输入"
+            fi
             ;;
         '')
             machine=${default_machine}
