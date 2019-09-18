@@ -24,7 +24,7 @@ check_massage=()
 
 ## 检查系统架构以区分 machine
 if [[ $(getconf LONG_BIT) == "64" ]]; then
-    machine_map=(intel-nuc odroid-c2 odroid-xu rangepi-prime qemuarm-64 qemux86-64 raspberrypi3-64 raspberrypi4-64 tinker)
+    machine_map=(intel-nuc odroid-c2 odroid-xu orangepi-prime qemuarm-64 qemux86-64 raspberrypi3-64 raspberrypi4-64 tinker)
     machine_info=("英特尔的nuc小主机" "韩国odroid-c2" "韩国odroid-xu" "香橙派" "通用arm设备（例如斐讯N1) 64位系统" "通用X86（普通的PC机电脑）64位系统" "树莓派三代64位系统" "树莓派四代64位系统" "华硕tinker")
     default_machine="qemux86-64"
 elif [[ $(getconf LONG_BIT) == "32" ]]; then
