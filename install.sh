@@ -264,6 +264,7 @@ error_exit(){
     echo "########################### END ###########################"
     echo "${1}"
     echo -e "${plain}"
+    echo -e "${yellow} 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
     exit 1
 }
 
@@ -535,6 +536,7 @@ echo -e "${yellow}[info]: 安装 hassio......${plain}"
 hassio_install
 if wait_homeassistant_run ;then
     echo -e "${green} hassio 安装完成，请输入你的 http://ip:8123 访问${plain}"
+    echo -e "${yellow} 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
 else
     echo "########################### Docker images ###########################"
     docker images
@@ -546,4 +548,5 @@ else
     docker logs homeassistant
     echo "########################### END ###########################"
     echo -e "${red} homeassistant 启动超时，请检查上方日志....或者重启操作系统${plain}"
+    echo -e "${yellow} 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
 fi
