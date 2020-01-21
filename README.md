@@ -10,7 +10,7 @@ hassio 一键安装脚本，实现以下功能。
 
 - [Raspbian](https://www.raspberrypi.org/downloads/raspbian/) 
 - [Ubuntu](https://www.ubuntu.com/download/server) 测试版本 18LTS通过，但按道理 16 以上都可以。
-- [Debian](https://www.debian.org/distrib/netinst) 测试版本 9.5 通过。
+- [Debian](https://www.debian.org/distrib/netinst) 测试版本 >=9.5 通过。
 
 ## 使用方法
 
