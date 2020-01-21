@@ -305,7 +305,7 @@ get_ipaddress(){
     local device_name=$(netstat -rn | grep -e '^0\.0\.0\.0' | awk '{print $8}' | head -n1)
     ipaddress=$(ifconfig ${device_name} | grep "inet"| grep -v "inet6" | awk '{ print $2}')
     if ! check_ip ${ipaddress} ;then
-        ipaddress='你的IP地址'
+        ipaddress='你的服务器的IP地址'
     fi
 }
 
