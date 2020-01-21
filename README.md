@@ -17,7 +17,7 @@ hassio 一键安装脚本，实现以下功能。
 以 root 身份运行以下命令。
 
 ```bash
-wget https://raw.githubusercontent.com/neroxps/hassio_install/master/install.sh
+wget https://code.aliyun.com/neroxps/hassio_install/raw/master/install.sh
 chmod a+x install.sh
 ./install.sh
 ```
@@ -119,7 +119,7 @@ chmod a+x install.sh
 请使用 root 权限运行以下命令。
 
 ```bash
-wget https://raw.githubusercontent.com/neroxps/hassio_install/master/hassio_upgrade.sh
+wget https://code.aliyun.com/neroxps/hassio_install/raw/master/install.sh
 chmod u+x hassio_upgrade.sh
 ./hassio_upgrade.sh
 ```
@@ -139,7 +139,7 @@ chmod u+x hassio_upgrade.sh
 使用 root 运行一下命令
 
 ```
-wget https://raw.githubusercontent.com/neroxps/hassio_install/master/homeassistant_ver_switch.sh
+wget https://code.aliyun.com/neroxps/hassio_install/raw/master/homeassistant_ver_switch.sh
 chmod u+x homeassistant_ver_switch.sh
 ./homeassistant_ver_switch.sh 0.92.2
 ```
