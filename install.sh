@@ -100,7 +100,7 @@ download_file(){
 ## 切换安装源
 replace_source(){
     if [[ -z ${systemCodename} ]]; then
-        error_exit "[ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考中科大源使用方法：http://mirrors.ustc.edu.cn/help/"
+        error_exit "${yellow} [ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考中科大源使用方法：http://mirrors.ustc.edu.cn/help/${plain}"
     fi
     [[ ! -f /etc/apt/sources.list.bak ]] && echo -e "${yellow}备份系统源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
 
@@ -158,7 +158,7 @@ update_system(){
 
 ## 安装 docker
 docker_install(){
-    download_file 'https://raw.githubusercontent.com/docker/docker-install/master/install.sh' 'get-docker.sh'
+    download_file 'get.docker.com' 'get-docker.sh'
     sed -i 's/DEFAULT_CHANNEL_VALUE="test"/DEFAULT_CHANNEL_VALUE="edge"/' get-docker.sh
     chmod u+x get-docker.sh
     ./get-docker.sh --mirror AzureChinaCloud
@@ -203,26 +203,24 @@ EOF
 hassio_install(){
     local i=10
     while true;do
-        stable_json=$(curl -Ls https://raw.githubusercontent.com/neroxps/qemux86-64-homeassistant/master/stable.json)
+        stable_json=$(curl -Ls https://version.home-assistant.io/stable.json)
         if [[ ! -z ${stable_json} ]]; then
             break;
         fi
         if [[ $i -eq 0 ]]; then
-            echo -e "${red}[ERROR]: 获取 hassio 版本号失败，请检查你系统网络与 https://raw.githubusercontent.com 的连接是否正常。${plain}"
-            exit 1
+            error_exit "${red}[ERROR]: 获取 hassio 版本号失败，请检查你系统网络与 https://version.home-assistant.io 的连接是否正常。${plain}"
         fi
         let i--
     done
     hassio_version=$(echo ${stable_json} |jq -r '.supervisor')
     homeassistant_version=$(echo ${stable_json} |jq -r '.homeassistant.default')
     if [ -z ${hassio_version} ] || [ -z ${homeassistant_version} ];then
-        echo -e "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 https://raw.githubusercontent.com 连接是否畅通。${plain}"
-        echo -e "${red}脚本退出...${plain}"
-        exit 1
+        error_exit "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 https://version.home-assistant.io 连接是否畅通。${plain}"
     fi
-    download_file 'https://raw.githubusercontent.com/home-assistant/hassio-installer/master/hassio_install.sh' 'hassio_install.sh'
+    download_file 'https://code.aliyun.com/neroxps/hassio-installer/raw/master/hassio_install.sh' 'hassio_install.sh'
     chmod u+x hassio_install.sh
     sed -i "s/HASSIO_VERSION=.*/HASSIO_VERSION=${hassio_version}/g" ./hassio_install.sh
+    sed -i "s@https://raw.githubusercontent.com/home-assistant/hassio-installer@https://code.aliyun.com/neroxps/hassio-installer/raw@g" ./hassio_install.sh
     echo -e "${yellow}从 hub.docker.com 下载 homeassistant/${machine}-homeassistant:${homeassistant_version}......${plain}"
     docker pull homeassistant/${machine}-homeassistant:${homeassistant_version}
     if [[ $? -eq 0 ]]; then
