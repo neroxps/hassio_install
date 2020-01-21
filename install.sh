@@ -175,6 +175,7 @@ docker_install(){
 
 ## apt 安装依赖方法
 apt_install(){
+    apt update
     apt install -y ${*}
     if [[ $? -ne 0 ]];then
         error_exit "${red}[ERROR]: 安装${1}失败，请将检查上方安装错误信息。${plain}"
@@ -278,6 +279,34 @@ wait_homeassistant_run(){
     done
     printf "fail\n"
     return 1
+}
+
+#检查 IP 合法性
+check_ip()
+{   
+    IP=$1   
+    if [[ $IP =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then   
+        FIELD1=$(echo $IP|cut -d. -f1)   
+        FIELD2=$(echo $IP|cut -d. -f2)   
+        FIELD3=$(echo $IP|cut -d. -f3)   
+        FIELD4=$(echo $IP|cut -d. -f4)   
+        if [ $FIELD1 -le 255 -a $FIELD2 -le 255 -a $FIELD3 -le 255 -a $FIELD4 -le 255 ]; then   
+            return 0 
+        else   
+            return 1
+        fi   
+    else   
+        return 1 
+    fi
+}
+
+#通过默认网关的网卡接口获取本机有效的IP地址
+get_ipaddress(){
+    local device_name=$(netstat -rn | grep -e '^0\.0\.0\.0' | awk '{print $8}' | head -n1)
+    ipaddress=$(ifconfig ${device_name} | grep "inet"| grep -v "inet6" | awk '{ print $2}')
+    if ! check_ip ${ipaddress} ;then
+        ipaddress='你的IP地址'
+    fi
 }
 
 # Main
@@ -532,8 +561,9 @@ fi
 ## 安装 hassio
 echo -e "${yellow}[info]: 安装 hassio......${plain}"
 hassio_install
+get_ipaddress
 if wait_homeassistant_run ;then
-    echo -e "${green} hassio 安装完成，请输入你的 http://ip:8123 访问${plain}"
+    echo -e "${green} hassio 安装完成，请输入 http://${ipaddress}:8123 访问你的 HomeAssistant${plain}"
     echo -e "${yellow} 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
 else
     echo "########################### Docker images ###########################"
