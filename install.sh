@@ -13,7 +13,7 @@ plain='\033[0m'
 
 # 变量
 ## 安装必备依赖
-Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager"
+Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools"
 
 ## 获取系统用户用作添加至 docker 用户组
 users=($(cat /etc/passwd | awk -F: '$3>=500' | cut -f 1 -d :| grep -v nobody))
