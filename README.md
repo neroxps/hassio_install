@@ -124,6 +124,41 @@ chmod u+x hassio_upgrade.sh
 ./hassio_upgrade.sh
 ```
 
+## 操作说明
+
+### 停止（但重启依然会自启动） 
+systemctl stop hassio-supervisor.service
+
+### 重启 
+systemctl restart hassio-supervisor.service
+
+### 禁用自启动
+`systemctl disable hassio-supervisor.service`
+
+### 启用自启动 
+`systemctl enable hassio-supervisor.service`
+
+### 查询当前启动状态 
+`systemctl status hassio-supervisor.service`
+
+### 查询当前是否自启动
+`systemctl  is-enabled hassio-supervisor.service`
+
+### 查询 hassio 日志 
+`docker logs -f hassio_supervisor`
+
+### 查询 hassio 日志最新20行信息 
+`docker logs -f hassio_supervisor --tail 20`
+
+### 查询 ha 日志 
+`docker logs -f homeassistant`
+
+### 查询 ha 日志最新20行信息 
+`docker logs -f homeassistant --tail 20`
+
+> systemctl 说明 ： [https://linux.cn/article-5926-1.html](https://linux.cn/article-5926-1.html)
+> docker logs 命令用法：[https://docs.docker.com/engine/reference/commandline/logs](https://docs.docker.com/engine/reference/commandline/logs)
+
 # Homeassistant 版本切换脚本
 
 此脚本可在宿主中切换homeassistant版本号
