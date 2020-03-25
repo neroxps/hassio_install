@@ -119,7 +119,7 @@ chmod a+x install.sh
 请使用 root 权限运行以下命令。
 
 ```bash
-wget https://code.aliyun.com/neroxps/hassio_install/raw/master/install.sh
+wget https://code.aliyun.com/neroxps/hassio_install/raw/master/hassio_upgrade.sh
 chmod u+x hassio_upgrade.sh
 ./hassio_upgrade.sh
 ```
