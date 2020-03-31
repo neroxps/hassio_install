@@ -2,8 +2,8 @@
 
 # Author : neroxps
 # Email : neroxps@gmail.com
-# Version : 3.3
-# Date : 2019-09-04
+# Version : 3.4
+# Date : 2020-03-31
 
 # 颜色
 red='\033[0;31m'
@@ -191,7 +191,10 @@ change_docker_registry(){
 cat << EOF > /etc/docker/daemon.json 
 { 
     "registry-mirrors": [ 
-    "${docker_registry_mirrors_url}" 
+    "https://dockerhub.azk8s.cn",
+    "https://reg-mirror.qiniu.com",
+    "https://hub-mirror.c.163.com",
+    "https://docker.mirrors.ustc.edu.cn"
     ]
 }
 EOF
@@ -223,13 +226,21 @@ hassio_install(){
     sed -i "s/HASSIO_VERSION=.*/HASSIO_VERSION=${hassio_version}/g" ./hassio_install.sh
     sed -i "s@https://raw.githubusercontent.com/home-assistant/hassio-installer@https://code.aliyun.com/neroxps/hassio-installer/raw@g" ./hassio_install.sh
     echo -e "${yellow}从 hub.docker.com 下载 homeassistant/${machine}-homeassistant:${homeassistant_version}......${plain}"
-    docker pull homeassistant/${machine}-homeassistant:${homeassistant_version}
-    if [[ $? -eq 0 ]]; then
-        docker tag homeassistant/${machine}-homeassistant:${homeassistant_version} homeassistant/${machine}-homeassistant:latest
-    else
-        echo -e "${red}[ERROR]: 从 docker 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，请检查上方失败信息。${plain}"
-        exit 1
-    fi
+    local i=10
+    while true ;do
+        docker pull homeassistant/${machine}-homeassistant:${homeassistant_version}
+        if [[ $? -eq 0 ]]; then
+            docker tag homeassistant/${machine}-homeassistant:${homeassistant_version} homeassistant/${machine}-homeassistant:latest
+            break;
+        else
+            echo -e "${yellow}[WARNING]: 从 docker hub 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，第 ${n} 次重试.${plain}"
+            if [[ ${i} -eq 0 ]]; then
+                echo -e "${red}[ERROR]: 从 docker 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，请检查上方失败信息。${plain}"
+                exit 1
+            fi
+        fi
+        let i--
+    done
     mkdir -p ${data_share_path}
 cat << EOF > ${data_share_path}/updater.json
 {
@@ -268,8 +279,8 @@ error_exit(){
 }
 
 wait_homeassistant_run(){
-    printf "等待 homeassistant 启动"
-    for ((i=0;i<=300;i++));do
+    printf "等待 homeassistant 启动(树莓派的话启动可能会慢一点请耐心等待)"
+    for ((i=0;i<=600;i++));do
         if netstat -napt |grep 8123 > /dev/null ;then 
             printf "done\n"
             return 0
@@ -405,32 +416,6 @@ while true; do
     case ${selected} in
         ''|Yes|YES|yes|y|Y)
                 CDR=true
-                echo ''
-                while true; do
-                    echo -e "1. docker-cn （docker 官方中国镜像源，阿里云提供服务，但流量大可能会卡）"
-                    echo -e "2. 七牛云 docker 镜像源"
-                    echo -e "3. 163 docker 镜像源（无 SSL）"
-                    read -p '请选择 docker 加速器（默认：七牛云）：' selected
-                    case ${selected} in
-                        1)
-                            docker_registry_mirrors_url="https://registry.docker-cn.com"
-                            chack_massage_text='docker-cn'
-                            break;
-                            ;;
-                        ''|2)
-                            docker_registry_mirrors_url="https://reg-mirror.qiniu.com"
-                            chack_massage_text='七牛云'
-                            break;
-                            ;;
-                        3)
-                            docker_registry_mirrors_url="http://hub-mirror.c.163.com"
-                            chack_massage_text='163源'
-                            break;
-                            ;;
-                        *)
-                            echo -e "输入错误，请重新输入。"
-                    esac
-                done
                 break;
             ;;
         No|NO|no|n|N)
