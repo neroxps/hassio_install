@@ -221,10 +221,10 @@ hassio_install(){
     if [ -z ${hassio_version} ] || [ -z ${homeassistant_version} ];then
         error_exit "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 https://version.home-assistant.io 连接是否畅通。${plain}"
     fi
-    download_file 'https://code.aliyun.com/neroxps/hassio-installer/raw/master/hassio_install.sh' 'hassio_install.sh'
+    download_file 'https://code.aliyun.com/neroxps/hassio-installer/raw/master/installer.sh' 'hassio_install.sh'
     chmod u+x hassio_install.sh
     sed -i "s/HASSIO_VERSION=.*/HASSIO_VERSION=${hassio_version}/g" ./hassio_install.sh
-    sed -i "s@https://raw.githubusercontent.com/home-assistant/hassio-installer@https://code.aliyun.com/neroxps/hassio-installer/raw@g" ./hassio_install.sh
+    sed -i "s@https://raw.githubusercontent.com/home-assistant/supervised-installer@https://code.aliyun.com/neroxps/hassio-installer/raw@g" ./hassio_install.sh
     echo -e "${yellow}从 hub.docker.com 下载 homeassistant/${machine}-homeassistant:${homeassistant_version}......${plain}"
     local i=10
     while true ;do
