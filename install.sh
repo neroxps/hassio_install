@@ -2,8 +2,8 @@
 
 # Author : neroxps
 # Email : neroxps@gmail.com
-# Version : 3.4
-# Date : 2020-03-31
+# Version : 3.5
+# Date : 2020-04-10
 
 # 颜色
 red='\033[0;31m'
@@ -13,7 +13,7 @@ plain='\033[0m'
 
 # 变量
 ## 安装必备依赖
-Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools"
+Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools qrencode"
 
 ## 获取系统用户用作添加至 docker 用户组
 users=($(cat /etc/passwd | awk -F: '$3>=500' | cut -f 1 -d :| grep -v nobody))
@@ -191,6 +191,7 @@ change_docker_registry(){
 cat << EOF > /etc/docker/daemon.json 
 { 
     "registry-mirrors": [ 
+    "https://rw21enj1.mirror.aliyuncs.com",
     "https://dockerhub.azk8s.cn",
     "https://reg-mirror.qiniu.com",
     "https://hub-mirror.c.163.com",
@@ -233,7 +234,7 @@ hassio_install(){
             docker tag homeassistant/${machine}-homeassistant:${homeassistant_version} homeassistant/${machine}-homeassistant:latest
             break;
         else
-            echo -e "${yellow}[WARNING]: 从 docker hub 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，第 ${n} 次重试.${plain}"
+            echo -e "${yellow}[WARNING]: 从 docker hub 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，第 ${i} 次重试.${plain}"
             if [[ ${i} -eq 0 ]]; then
                 echo -e "${red}[ERROR]: 从 docker 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，请检查上方失败信息。${plain}"
                 exit 1
@@ -241,15 +242,6 @@ hassio_install(){
         fi
         let i--
     done
-    mkdir -p ${data_share_path}
-cat << EOF > ${data_share_path}/updater.json
-{
-  "channel": "stable",
-  "hassio": "${hassio_version}",
-  "homeassistant": "${homeassistant_version}",
-  "dns":"1"
-}
-EOF
     echo -e "${yellow}开始 hassio 安装流程。(如出现 [Warning] 请忽略，无须理会)${plain}"
     ./hassio_install.sh -m ${machine} --data-share ${data_share_path}
     
@@ -318,6 +310,14 @@ get_ipaddress(){
     if ! check_ip ${ipaddress} ;then
         ipaddress='你的服务器的IP地址'
     fi
+}
+
+# 打印赞赏二维码
+print_sponsor(){
+    local url='https://qr.alipay.com/fkx16030bqmbsoauc8ezmce'
+    echo ''
+    echo -e "${yellow} [支付宝]： 如果你觉得本脚本帮到您，可以选择请我喝杯咖啡喔~😊 ${plain}"
+    qrencode -t UTF8 "${url}"
 }
 
 # Main
@@ -550,6 +550,7 @@ get_ipaddress
 if wait_homeassistant_run ;then
     echo -e "${green} hassio 安装完成，请输入 http://${ipaddress}:8123 访问你的 HomeAssistant${plain}"
     echo -e "${yellow} 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
+    print_sponsor
 else
     echo "########################### Docker images ###########################"
     docker images
