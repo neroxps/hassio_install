@@ -323,7 +323,7 @@ print_sponsor(){
 # Main
 
 ## 检查脚本运行环境
-if [[ $USER != "root" ]];then
+if ! id | grep -q 'root' 2>/dev/null ;then
     echo -e "${red}[ERROR]: 请输入 \"sudo -s\" 切换至 root 账户运行本脚本...脚本退出${plain}"
     exit 1
 fi
