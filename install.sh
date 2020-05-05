@@ -45,29 +45,21 @@ check_sys(){
     if [[ -f /etc/redhat-release ]]; then
         release="centos"
         systemPackage="yum"
-    elif lsb_release -a 2>/dev/null | grep -Eqi "raspbian"; then
+    elif grep -Eqi "raspbian" /etc/*-release ; then
         release="raspbian"
         systemPackage="apt"
-        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
-    elif grep -Eqi "debian" /etc/issue; then
-        release="debian"
-        systemPackage="apt"
-        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
+        systemCodename=$(grep "VERSION_CODENAME" /etc/*-release | awk -F '=' '{print $2}')
     elif grep -Eqi "ubuntu" /etc/issue; then
         release="ubuntu"
         systemPackage="apt"
-        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
+        systemCodename=$(grep "VERSION_CODENAME" /etc/*-release | awk -F '=' '{print $2}')
+    elif grep -Eqi "debian" /etc/issue; then
+        release="debian"
+        systemPackage="apt"
+        systemCodename=$(grep "VERSION_CODENAME" /etc/*-release | awk -F '=' '{print $2}')
     elif grep -Eqi "centos|red hat|redhat" /etc/issue; then
         release="centos"
         systemPackage="yum"
-    elif grep -Eqi "debian" /proc/version; then
-        release="debian"
-        systemPackage="apt"
-        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
-    elif grep -Eqi "ubuntu" /proc/version; then
-        release="ubuntu"
-        systemPackage="apt"
-        systemCodename=$(lsb_release -a 2>/dev/null | awk '/Codename/ {print $2}')
     elif grep -Eqi "centos|red hat|redhat" /proc/version; then
         release="centos"
         systemPackage="yum"
@@ -100,36 +92,71 @@ download_file(){
 ## 切换安装源
 replace_source(){
     if [[ -z ${systemCodename} ]]; then
-        error_exit "${yellow} [ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考中科大源使用方法：http://mirrors.ustc.edu.cn/help/${plain}"
+        error_exit "${yellow} [ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考清华源使用方法：http://mirrors.ustc.edu.cn/help/${plain}"
     fi
     [[ ! -f /etc/apt/sources.list.bak ]] && echo -e "${yellow}备份系统源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
 
-    case $(uname -m) in
-        "x86_64" | "i686" | "i386" )
-            if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
-                download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
-            fi
-            ;;
-        "arm" | "armv7l" | "armv6l" | "aarch64" | "armhf" | "arm64" | "ppc64el")
-            if [[ -f /etc/apt/sources.list.d/armbian.list ]] ;then
-                echo -e "${yellow}发现 armbian 源，重命名armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}"
-                mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
-            fi
-            if [[ ${release} == "debian" ]]; then
-                download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
-            elif [[  ${release} == "raspbian" ]]; then
-                echo "deb http://mirrors.ustc.edu.cn/raspbian/raspbian/ ${systemCodename} main contrib non-free rpi" > /etc/apt/sources.list
-                echo "deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/debian/ ${systemCodename} main ui" >> /etc/apt/sources.list
-            elif [[ ${release} == "ubuntu" ]]; then
-                echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename} main restricted universe multiverse" > /etc/apt/sources.list
-                echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-updates main restricted universe multiverse" >> /etc/apt/sources.list
-                echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-backports main restricted universe multiverse" >> /etc/apt/sources.list
-                echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-security main restricted universe multiverse" >> /etc/apt/sources.list
-            fi
-            ;;
-        *)  error_exit "[ERROR]: 由于无法获取系统架构，故此无法切换系统源，请跳过系统源切换。"
-            ;;
-    esac
+    # 中科大
+    # case $(uname -m) in
+    #     "x86_64" | "i686" | "i386" )
+    #         if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
+    #             download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
+    #         fi
+    #         ;;
+    #     "arm" | "armv7l" | "armv6l" | "aarch64" | "armhf" | "arm64" | "ppc64el")
+    #         if [[ -f /etc/apt/sources.list.d/armbian.list ]] ;then
+    #             echo -e "${yellow}发现 armbian 源，重命名armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}"
+    #             mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
+    #         fi
+    #         if [[ ${release} == "debian" ]]; then
+    #             download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
+    #         elif [[  ${release} == "raspbian" ]]; then
+    #             echo "deb http://mirrors.ustc.edu.cn/raspbian/raspbian/ ${systemCodename} main contrib non-free rpi" > /etc/apt/sources.list
+    #             echo "deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/debian/ ${systemCodename} main ui" >> /etc/apt/sources.list
+    #         elif [[ ${release} == "ubuntu" ]]; then
+    #             echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename} main restricted universe multiverse" > /etc/apt/sources.list
+    #             echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-updates main restricted universe multiverse" >> /etc/apt/sources.list
+    #             echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-backports main restricted universe multiverse" >> /etc/apt/sources.list
+    #             echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-security main restricted universe multiverse" >> /etc/apt/sources.list
+    #         fi
+    #         ;;
+    #     *)  error_exit "[ERROR]: 由于无法获取系统架构，故此无法切换系统源，请跳过系统源切换。"
+    #         ;;
+    # esac
+
+    # 清华源
+    if [[ ${release} == "debian" ]]; then
+        {
+            echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename} main contrib non-free"
+            echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename}-updates main contrib non-free"
+            echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename}-backports main contrib non-free"
+            echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security ${systemCodename}/updates main contrib non-free"
+        } > /etc/apt/sources.list
+    fi
+    if [[ ${release} == "ubuntu" ]]; then
+        {
+            echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse"
+            echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse"
+            echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse"
+            echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-security main restricted universe multiverse"
+        } > /etc/apt/sources.list
+    fi
+
+    if [[ -f /etc/apt/sources.list.d/armbian.list ]] ;then
+        echo -e "${yellow}发现 armbian 源，替换清华源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}"
+        cp /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
+        sed -i 's|http[s]*://apt.armbian.com|http://mirrors.tuna.tsinghua.edu.cn/armbian|g' /etc/apt/sources.list.d/armbian.list
+    fi
+
+    if [[  ${release} == "raspbian" ]]; then
+        {
+            echo "deb http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ buster main non-free contrib rpi"
+            echo "deb-src http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ buster main non-free contrib rpi"
+        } > /etc/apt/sources.list
+        if [[ -f "/etc/apt/sources.list.d/raspi.list" ]]; then
+            echo "deb http://mirrors.tuna.tsinghua.edu.cn/raspberrypi/ ${systemCodename} main ui" > "/etc/apt/sources.list.d/raspi.list"
+        fi
+    fi
 
     apt update
     if [[ $? -ne 0 ]]; then
@@ -158,7 +185,7 @@ update_system(){
 
 ## 安装 docker
 docker_install(){
-    download_file 'get.docker.com' 'get-docker.sh'
+    download_file 'https://get.docker.com' 'get-docker.sh'
     sed -i 's/DEFAULT_CHANNEL_VALUE="test"/DEFAULT_CHANNEL_VALUE="edge"/' get-docker.sh
     chmod u+x get-docker.sh
     ./get-docker.sh --mirror AzureChinaCloud
@@ -334,7 +361,7 @@ check_sys
 ## 配置安装选项
 ### 1. 配置安装源
 
-echo -e "(${title_num}). 是否将系统源切换为中科大(USTC)源（目前支持 Debian Ubuntu Raspbian 三款系统）"
+echo -e "(${title_num}). 是否将系统源切换为清华源（目前支持 Debian Ubuntu Raspbian 三款系统）"
 while true; do
     read -p "请输入 y or n（默认 yes):" selected
     case ${selected} in
@@ -351,7 +378,7 @@ while true; do
             ;;
     esac
 done
-check_massage+=(" # ${title_num}. 是否将系统源切换为中科大(USTC)源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
+check_massage+=(" # ${title_num}. 是否将系统源切换为清华源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
 let title_num++
 
 ### 2. 是否将用户添加至 docker 用户组
