@@ -72,13 +72,13 @@ download_file(){
     local file_name=$2
     if [ -z ${file_name} ];then
         if which curl > /dev/null 2>&1 ; then
-            curl -sSL ${url}
+            curl -# ${url}
         else
             wget ${url}
         fi
     else
         if which curl > /dev/null 2>&1 ; then
-            curl -sSL -o ${file_name} ${url}
+            curl -# -o ${file_name} ${url}
         else
             wget --output-document=${file_name} ${url}
         fi
