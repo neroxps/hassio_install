@@ -125,38 +125,74 @@ replace_source(){
     # esac
 
     # 清华源
-    if [[ ${release} == "debian" ]]; then
-        {
-            echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename} main contrib non-free"
-            echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename}-updates main contrib non-free"
-            echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename}-backports main contrib non-free"
-            echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security ${systemCodename}/updates main contrib non-free"
-        } > /etc/apt/sources.list
-    fi
-    if [[ ${release} == "ubuntu" ]]; then
-        {
-            echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse"
-            echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse"
-            echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse"
-            echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-security main restricted universe multiverse"
-        } > /etc/apt/sources.list
-    fi
 
-    if [[ -f /etc/apt/sources.list.d/armbian.list ]] ;then
-        echo -e "${yellow}发现 armbian 源，替换清华源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}"
-        cp /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
-        sed -i 's|http[s]*://apt.armbian.com|http://mirrors.tuna.tsinghua.edu.cn/armbian|g' /etc/apt/sources.list.d/armbian.list
-    fi
+    case $(uname -m) in
+        "x86_64" | "i686" | "i386" )
+            # debian from x86_64
+            if [[ ${release} == "debian" ]]; then
+                {
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename} main contrib non-free"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename}-updates main contrib non-free"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename}-backports main contrib non-free"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security ${systemCodename}/updates main contrib non-free"
+                } > /etc/apt/sources.list
+            fi
 
-    if [[  ${release} == "raspbian" ]]; then
-        {
-            echo "deb http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ buster main non-free contrib rpi"
-            echo "deb-src http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ buster main non-free contrib rpi"
-        } > /etc/apt/sources.list
-        if [[ -f "/etc/apt/sources.list.d/raspi.list" ]]; then
-            echo "deb http://mirrors.tuna.tsinghua.edu.cn/raspberrypi/ ${systemCodename} main ui" > "/etc/apt/sources.list.d/raspi.list"
-        fi
-    fi
+            # Ubuntu from x86_64
+            if [[ ${release} == "ubuntu" ]]; then
+                {
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ ${systemCodename} main restricted universe multiverse"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ ${systemCodename}-updates main restricted universe multiverse"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ ${systemCodename}-backports main restricted universe multiverse"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ ${systemCodename}-security main restricted universe multiverse"
+                } > /etc/apt/sources.list
+            fi
+            ;;
+        "arm" | "armv7l" | "armv6l" | "aarch64" | "armhf" | "arm64" | "ppc64el")
+            if [[ -f /etc/apt/sources.list.d/armbian.list ]] ;then
+                echo -e "${yellow}发现 armbian 源，替换清华源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}"
+                cp /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
+                sed -i 's|http[s]*://apt.armbian.com|http://mirrors.tuna.tsinghua.edu.cn/armbian|g' /etc/apt/sources.list.d/armbian.list
+            fi
+
+            # debian from ARM
+            if [[ ${release} == "debian" ]]; then
+                {
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename} main contrib non-free"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename}-updates main contrib non-free"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ ${systemCodename}-backports main contrib non-free"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security ${systemCodename}/updates main contrib non-free"
+                } > /etc/apt/sources.list
+            fi
+
+            # Ubuntu from ARM
+            if [[ ${release} == "ubuntu" ]]; then
+                {
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ ${systemCodename} main restricted universe multiverse"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ ${systemCodename}-updates main restricted universe multiverse"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ ${systemCodename}-backports main restricted universe multiverse"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ ${systemCodename}-security main restricted universe multiverse"
+                } > /etc/apt/sources.list
+            fi
+
+            if [[  ${release} == "raspbian" ]]; then
+                {
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ buster main non-free contrib rpi"
+                    echo "deb-src http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ buster main non-free contrib rpi"
+                } > /etc/apt/sources.list
+                if [[ -f "/etc/apt/sources.list.d/raspi.list" ]]; then
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/raspberrypi/ ${systemCodename} main ui" > "/etc/apt/sources.list.d/raspi.list"
+                fi
+            fi
+            ;;
+        *)  error_exit "[ERROR]: 由于无法获取系统架构，故此无法切换系统源，请跳过系统源切换。"
+            ;;
+    esac
+
+#####
+
+
+
 
     apt update
     if [[ $? -ne 0 ]]; then
@@ -277,7 +313,7 @@ hassio_install(){
     fi
 }
 
-ubuntu_18_10_docker_install(){
+ubuntu_docker_install(){
     apt install docker.io -y
 }
 
@@ -550,11 +586,8 @@ apt_install ${Ubunt_Debian_Requirements}
 ## 安装 Docker 引擎
 if ! command -v docker;then
     echo -e "${yellow}[info]: 安装 Docker 引擎.....${plain}"
-    if [[ ${systemCodename} == "cosmic" ]]; then
-        echo -e "${yellow}[info]: 发现你系统为 Ubuntu 18.10(cosmic) 该系统 docker 官方并不推荐使用，建议安装 Ubuntu 18.04.....${plain}"
-        echo -e "${yellow}[info]: 您可以输入任意键继续从源安装兼容 Ubuntu 18.16 的 docker，或选择 Ctrl+C 结束安装。${plain}"
-        read 
-        ubuntu_18_10_docker_install
+    if [[ ${release} == "ubuntu" ]]; then
+        ubuntu_docker_install
     else
         docker_install
     fi
