@@ -334,7 +334,7 @@ error_exit(){
 }
 
 wait_homeassistant_run(){
-    printf "等待 homeassistant 启动(树莓派的话启动可能会慢一点请耐心等待)"
+    printf "等待 homeassistant 启动(由于 hassio 启动需要从 github pull addons 的库，所以启动速度视 pull 速度而定。)"
     for ((i=0;i<=600;i++));do
         if netstat -napt |grep 8123 > /dev/null ;then 
             printf "done\n"
