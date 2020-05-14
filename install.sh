@@ -72,7 +72,7 @@ download_file(){
     local file_name=$2
     if [ -z ${file_name} ];then
         if which curl > /dev/null 2>&1 ; then
-            curl -# ${url}
+            curl -# -O ${url}
         else
             wget ${url}
         fi
@@ -285,7 +285,14 @@ hassio_install(){
     if [ -z ${hassio_version} ] || [ -z ${homeassistant_version} ];then
         error_exit "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 https://version.home-assistant.io 连接是否畅通。${plain}"
     fi
-    download_file 'https://code.aliyun.com/neroxps/hassio-installer/raw/master/installer.sh' 'hassio_install.sh'
+    local x=1
+    while true ; do
+        [[ $x -eq 10 ]] && error_exit "${red}[ERROR]: 获取 hassio 官方一键脚本失败，请检查你系统网络与 https://code.aliyun.com 的连接是否正常。${plain}"
+        echo -e "${yellow}下载 hassio_install.sh 官方脚本 第${x}次${plain}"
+        download_file 'https://code.aliyun.com/neroxps/hassio-installer/raw/master/installer.sh' 'hassio_install.sh'
+        grep -q '#!/usr/bin/env bash' hassio_install.sh && break
+        ((x++))
+    done
     chmod u+x hassio_install.sh
     sed -i "s/HASSIO_VERSION=.*/HASSIO_VERSION=${hassio_version}/g" ./hassio_install.sh
     sed -i "s@https://raw.githubusercontent.com/home-assistant/supervised-installer@https://code.aliyun.com/neroxps/hassio-installer/raw@g" ./hassio_install.sh
