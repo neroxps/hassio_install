@@ -222,7 +222,7 @@ update_system(){
 ## 安装 docker
 docker_install(){
     download_file 'https://get.docker.com' 'get-docker.sh'
-    sed -i 's/DEFAULT_CHANNEL_VALUE="test"/DEFAULT_CHANNEL_VALUE="edge"/' get-docker.sh
+    sed -i 's/DEFAULT_CHANNEL_VALUE="test"/DEFAULT_CHANNEL_VALUE="stable"/' get-docker.sh
     chmod u+x get-docker.sh
     ./get-docker.sh --mirror AzureChinaCloud
     if ! systemctl status docker > /dev/null 2>&1 ;then
