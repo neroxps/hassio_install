@@ -2,8 +2,8 @@
 
 # Author : neroxps
 # Email : neroxps@gmail.com
-# Version : 3.5
-# Date : 2020-04-10
+# Version : 3.6
+# Date : 2020-08-15
 
 # 颜色
 red='\033[0;31m'
@@ -13,7 +13,7 @@ plain='\033[0m'
 
 # 变量
 ## 安装必备依赖
-Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools qrencode"
+Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode"
 
 ## 获取系统用户用作添加至 docker 用户组
 users=($(cat /etc/passwd | awk -F: '$3>=500' | cut -f 1 -d :| grep -v nobody))
@@ -254,7 +254,6 @@ change_docker_registry(){
 cat << EOF > /etc/docker/daemon.json 
 { 
     "registry-mirrors": [ 
-    "https://rw21enj1.mirror.aliyuncs.com",
     "https://dockerhub.azk8s.cn",
     "https://reg-mirror.qiniu.com",
     "https://hub-mirror.c.163.com",
@@ -287,15 +286,16 @@ hassio_install(){
     fi
     local x=1
     while true ; do
-        [[ $x -eq 10 ]] && error_exit "${red}[ERROR]: 获取 hassio 官方一键脚本失败，请检查你系统网络与 https://code.aliyun.com 的连接是否正常。${plain}"
+        [[ $x -eq 10 ]] && error_exit "${red}[ERROR]: 获取 hassio 官方一键脚本失败，请检查你系统网络与 https://cdn.jsdelivr.net 的连接是否正常。${plain}"
         echo -e "${yellow}下载 hassio_install.sh 官方脚本 第${x}次${plain}"
-        download_file 'https://code.aliyun.com/neroxps/hassio-installer/raw/master/installer.sh' 'hassio_install.sh'
+        download_file 'https://cdn.jsdelivr.net/gh/home-assistant/supervised-installer/installer.sh' 'hassio_install.sh'
         grep -q '#!/usr/bin/env bash' hassio_install.sh && break
         ((x++))
     done
     chmod u+x hassio_install.sh
     sed -i "s/HASSIO_VERSION=.*/HASSIO_VERSION=${hassio_version}/g" ./hassio_install.sh
-    sed -i "s@https://raw.githubusercontent.com/home-assistant/supervised-installer@https://code.aliyun.com/neroxps/hassio-installer/raw@g" ./hassio_install.sh
+    sed -i 's|/master||g' ./hassio_install.sh
+    sed -i 's|raw\.githubusercontent\.com|cdn.jsdelivr.net/gh|' ./hassio_install.sh
     echo -e "${yellow}从 hub.docker.com 下载 homeassistant/${machine}-homeassistant:${homeassistant_version}......${plain}"
     local i=10
     while true ;do
