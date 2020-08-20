@@ -2,8 +2,8 @@
 
 # Author : neroxps
 # Email : neroxps@gmail.com
-# Version : 3.7
-# Date : 2020-08-19
+# Version : 3.8
+# Date : 2020-08-20
 
 # 颜色
 red='\033[0;31m'
@@ -13,7 +13,7 @@ plain='\033[0m'
 
 # 变量
 ## 安装必备依赖
-Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode"
+Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode apparmor apparmor-utils auditd"
 
 ## 获取系统用户用作添加至 docker 用户组
 users=($(cat /etc/passwd | awk -F: '$3>=500' | cut -f 1 -d :| grep -v nobody))
