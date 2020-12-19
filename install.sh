@@ -262,6 +262,8 @@ change_docker_registry(){
     fi
 cat << EOF > /etc/docker/daemon.json 
 { 
+    "log-driver": "journald",
+    "storage-driver": "overlay2",
     "registry-mirrors": [ 
     "https://dockerhub.azk8s.cn",
     "https://reg-mirror.qiniu.com",
