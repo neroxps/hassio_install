@@ -351,16 +351,18 @@ error_exit(){
 }
 
 wait_homeassistant_run(){
-    printf "等待 homeassistant 启动(由于 hassio 启动需要从 github pull addons 的库，所以启动速度视 pull 速度而定。)"
-    for ((i=0;i<=600;i++));do
+    info "等待 homeassistant 启动(由于 hassio 启动需要从 github pull addons 的库，所以启动速度视 pull 速度而定。)"
+    docker logs -f hassio_supervisor &
+    logs_pid=$!
+    supervisor_log_file=$(docker inspect --format='{{.LogPath}}' hassio_supervisor)
+    for ((i=0;i<=3000;i++));do
         if netstat -napt |grep 8123 > /dev/null ;then 
-            printf "done\n"
+            kill ${logs_pid}
             return 0
         fi
         sleep 1 
-        printf "."
     done
-    printf "fail\n"
+    kill ${logs_pid}
     return 1
 }
 
