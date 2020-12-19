@@ -10,6 +10,7 @@ red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
+script_version="2020.12.19.0"
 
 function info { echo -e "\e[32m[info] $*\e[39m"; }
 function warn  { echo -e "\e[33m[warn] $*\e[39m"; }
@@ -636,6 +637,7 @@ if wait_homeassistant_run ;then
     echo -e "${yellow} 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
     print_sponsor
 else
+    echo "########################### Script Version: ${script_version}###########################"
     echo "########################### Docker images ###########################"
     docker images
     echo "########################### Docker ps ###########################"
