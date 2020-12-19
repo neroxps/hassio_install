@@ -357,7 +357,7 @@ wait_homeassistant_run(){
         if docker ps| grep -q hassio_supervisor; then
             docker logs -f hassio_supervisor &
             logs_pid=$!
-            continue
+            break;
         fi
     done
     supervisor_log_file=$(docker inspect --format='{{.LogPath}}' hassio_supervisor)
