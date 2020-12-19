@@ -11,6 +11,10 @@ green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
 
+function info { echo -e "\e[32m[info] $*\e[39m"; }
+function warn  { echo -e "\e[33m[warn] $*\e[39m"; }
+function error { echo -e "\e[31m[error] $*\e[39m"; exit 1; }
+
 # 变量
 ## 安装必备依赖
 Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode apparmor apparmor-utils auditd"
@@ -46,6 +50,7 @@ check_sys(){
         release="centos"
         systemPackage="yum"
     elif grep -Eqi "raspbian" /etc/*-release ; then
+        error "由于 raspbian 系统暂不支持 apparmor 内核模块,所以请安装 debian 系统再安装 hassio。"
         release="raspbian"
         systemPackage="apt"
         systemCodename=$(grep "VERSION_CODENAME" /etc/*-release | awk -F '=' '{print $2}')
