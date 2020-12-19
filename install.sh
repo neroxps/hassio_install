@@ -241,7 +241,7 @@ apt_install(){
     apt update
     apt install -y ${*}
     if [[ $? -ne 0 ]];then
-        error_exit "${red}[ERROR]: 安装${1}失败，请将检查上方安装错误信息。${plain}"
+        error_exit "${red}[ERROR]: 安装${*}失败，请将检查上方安装错误信息。${plain}"
     fi
 }
 
