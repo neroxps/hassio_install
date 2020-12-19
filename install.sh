@@ -14,10 +14,11 @@ plain='\033[0m'
 function info { echo -e "\e[32m[info] $*\e[39m"; }
 function warn  { echo -e "\e[33m[warn] $*\e[39m"; }
 function error { echo -e "\e[31m[error] $*\e[39m"; exit 1; }
+function version_lt() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"; }
 
 # 变量
 ## 安装必备依赖
-Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode apparmor apparmor-utils auditd"
+Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode apparmor apparmor-utils"
 
 ## 获取系统用户用作添加至 docker 用户组
 users=($(cat /etc/passwd | awk -F: '$3>=500' | cut -f 1 -d :| grep -v nobody))
@@ -50,7 +51,10 @@ check_sys(){
         release="centos"
         systemPackage="yum"
     elif grep -Eqi "raspbian" /etc/*-release ; then
-        error "由于 raspbian 系统暂不支持 apparmor 内核模块,所以请安装 debian 系统再安装 hassio。"
+        kernel_version=$(uname -r | grep -oP '\d+\.\d+\.\d+')
+        if version_lt "${kernel_version}" "5.4.79";then
+            error "当前 ${kernel_version} 内核系统暂不支持 apparmor 内核模块需要更新内核(≥ 5.4.79)。"
+        fi
         release="raspbian"
         systemPackage="apt"
         systemCodename=$(grep "VERSION_CODENAME" /etc/*-release | awk -F '=' '{print $2}')
@@ -182,11 +186,11 @@ replace_source(){
 
             if [[  ${release} == "raspbian" ]]; then
                 {
-                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ buster main non-free contrib rpi"
-                    echo "deb-src http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ buster main non-free contrib rpi"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ ${systemCodename} main non-free contrib rpi"
+                    echo "deb-src http://mirrors.tuna.tsinghua.edu.cn/raspbian/raspbian/ ${systemCodename} main non-free contrib rpi"
                 } > /etc/apt/sources.list
                 if [[ -f "/etc/apt/sources.list.d/raspi.list" ]]; then
-                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/raspberrypi/ ${systemCodename} main ui" > "/etc/apt/sources.list.d/raspi.list"
+                    echo "deb http://mirrors.tuna.tsinghua.edu.cn/raspberrypi/ ${systemCodename} main" > "/etc/apt/sources.list.d/raspi.list"
                 fi
             fi
             ;;
