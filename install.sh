@@ -1,20 +1,14 @@
 #!/bin/bash
 
-# Author : neroxps
-# Email : neroxps@gmail.com
-# Version : 3.8
-# Date : 2020-08-20
-
 # 颜色
 red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
-script_version="2020.12.19.0"
+script_version="2020.12.24.0"
 
 function info { echo -e "\e[32m[info] $*\e[39m"; }
 function warn  { echo -e "\e[33m[warn] $*\e[39m"; }
-function error { echo -e "\e[31m[error] $*\e[39m"; exit 1; }
 function version_lt() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"; }
 
 # 变量
@@ -102,9 +96,9 @@ download_file(){
 ## 切换安装源
 replace_source(){
     if [[ -z ${systemCodename} ]]; then
-        error_exit "${yellow} [ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考清华源使用方法：http://mirrors.ustc.edu.cn/help/${plain}"
+        error "${yellow} [ERROR]: 由于无法确定系统版本，故请手动切换系统源，切换方法参考清华源使用方法：http://mirrors.ustc.edu.cn/help/${plain}"
     fi
-    [[ ! -f /etc/apt/sources.list.bak ]] && echo -e "${yellow}备份系统源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
+    [[ ! -f /etc/apt/sources.list.bak ]] && warn "备份系统源文件为 /etc/apt/sources.list.bak${plain}" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
 
     # 中科大
     # case $(uname -m) in
@@ -115,7 +109,7 @@ replace_source(){
     #         ;;
     #     "arm" | "armv7l" | "armv6l" | "aarch64" | "armhf" | "arm64" | "ppc64el")
     #         if [[ -f /etc/apt/sources.list.d/armbian.list ]] ;then
-    #             echo -e "${yellow}发现 armbian 源，重命名armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}"
+    #             warn "发现 armbian 源，重命名armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}"
     #             mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
     #         fi
     #         if [[ ${release} == "debian" ]]; then
@@ -130,7 +124,7 @@ replace_source(){
     #             echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-security main restricted universe multiverse" >> /etc/apt/sources.list
     #         fi
     #         ;;
-    #     *)  error_exit "[ERROR]: 由于无法获取系统架构，故此无法切换系统源，请跳过系统源切换。"
+    #     *)  error "[ERROR]: 由于无法获取系统架构，故此无法切换系统源，请跳过系统源切换。"
     #         ;;
     # esac
 
@@ -160,7 +154,7 @@ replace_source(){
             ;;
         "arm" | "armv7l" | "armv6l" | "aarch64" | "armhf" | "arm64" | "ppc64el")
             if [[ -f /etc/apt/sources.list.d/armbian.list ]] ;then
-                echo -e "${yellow}发现 armbian 源，替换清华源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}"
+                warn "发现 armbian 源，替换清华源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\"${plain}"
                 cp /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
                 sed -i 's|http[s]*://apt.armbian.com|http://mirrors.tuna.tsinghua.edu.cn/armbian|g' /etc/apt/sources.list.d/armbian.list
             fi
@@ -195,7 +189,7 @@ replace_source(){
                 fi
             fi
             ;;
-        *)  error_exit "[ERROR]: 由于无法获取系统架构，故此无法切换系统源，请跳过系统源切换。"
+        *)  error "[ERROR]: 由于无法获取系统架构，故此无法切换系统源，请跳过系统源切换。"
             ;;
     esac
 
@@ -207,7 +201,7 @@ replace_source(){
     apt update
     if [[ $? -ne 0 ]]; then
         mv /etc/apt/sources.list.bak /etc/apt/sources.list
-        error_exit "[ERROR]: 系统源切换错误，请检查网络连接是否正常，脚本退出"
+        error "[ERROR]: 系统源切换错误，请检查网络连接是否正常，脚本退出"
     fi
 }
 
@@ -216,7 +210,7 @@ update_system(){
     if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]] || [[ ${release} == "raspbian" ]]; then
         apt upgrade -y
         if [[ $? != 0 ]]; then
-            error_exit "[ERROR]: 系统更新失败，脚本退出。"
+            error "[ERROR]: 系统更新失败，脚本退出。"
         fi
         echo -e "${green}[info]: 系统更新成功。${plain}"
     fi
@@ -236,12 +230,12 @@ docker_install(){
     chmod u+x get-docker.sh
     ./get-docker.sh --mirror Aliyun
     if ! systemctl status docker > /dev/null 2>&1 ;then
-        error_exit "${red}[ERROR]: Docker 安装失败，请检查上方安装错误信息。 你也可以选择通过搜索引擎，搜索你系统安装docker的方法，安装后重新执行脚本。${plain}"
+        error "${red}[ERROR]: Docker 安装失败，请检查上方安装错误信息。 你也可以选择通过搜索引擎，搜索你系统安装docker的方法，安装后重新执行脚本。${plain}"
     else
         echo -e "${green}[info]: Docker 安装成功。${plain}"
     fi
     if [[ ! -z ${add_User_Docker} ]];then
-        echo -e "${yellow}添加用户 ${add_User_Docker} 到 Docker 用户组${plain}"
+        warn "添加用户 ${add_User_Docker} 到 Docker 用户组${plain}"
         usermod -aG docker ${add_User_Docker}
     fi
 }
@@ -251,7 +245,7 @@ apt_install(){
     apt update
     apt install -y ${*}
     if [[ $? -ne 0 ]];then
-        error_exit "${red}[ERROR]: 安装${*}失败，请将检查上方安装错误信息。${plain}"
+        error "${red}[ERROR]: 安装${*}失败，请将检查上方安装错误信息。${plain}"
     fi
 }
 
@@ -287,19 +281,19 @@ hassio_install(){
             break;
         fi
         if [[ $i -eq 0 ]]; then
-            error_exit "${red}[ERROR]: 获取 hassio 版本号失败，请检查你系统网络与 https://version.home-assistant.io 的连接是否正常。${plain}"
+            error "${red}[ERROR]: 获取 hassio 版本号失败，请检查你系统网络与 https://version.home-assistant.io 的连接是否正常。${plain}"
         fi
         let i--
     done
     hassio_version=$(echo ${stable_json} |jq -r '.supervisor')
     homeassistant_version=$(echo ${stable_json} |jq -r '.homeassistant.default')
     if [ -z ${hassio_version} ] || [ -z ${homeassistant_version} ];then
-        error_exit "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 https://version.home-assistant.io 连接是否畅通。${plain}"
+        error "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 https://version.home-assistant.io 连接是否畅通。${plain}"
     fi
     local x=1
     while true ; do
-        [[ $x -eq 10 ]] && error_exit "${red}[ERROR]: 获取 hassio 官方一键脚本失败，请检查你系统网络与 https://code.aliyun.com/ 的连接是否正常。${plain}"
-        echo -e "${yellow}下载 hassio_install.sh 官方脚本 第${x}次${plain}"
+        [[ $x -eq 10 ]] && error "${red}[ERROR]: 获取 hassio 官方一键脚本失败，请检查你系统网络与 https://code.aliyun.com/ 的连接是否正常。${plain}"
+        warn "下载 hassio_install.sh 官方脚本 第${x}次${plain}"
         download_file 'https://code.aliyun.com/neroxps/supervised-installer/raw/master/installer.sh' 'hassio_install.sh'
         grep -q '#!/usr/bin/env bash' hassio_install.sh && break
         ((x++))
@@ -307,7 +301,7 @@ hassio_install(){
     chmod u+x hassio_install.sh
     sed -i "s/HASSIO_VERSION=.*/HASSIO_VERSION=${hassio_version}/g" ./hassio_install.sh
     sed -i 's@https://raw.githubusercontent.com/home-assistant/supervised-installer/master/@https://code.aliyun.com/neroxps/supervised-installer/raw/master/@g' ./hassio_install.sh
-    echo -e "${yellow}从 hub.docker.com 下载 homeassistant/${machine}-homeassistant:${homeassistant_version}......${plain}"
+    warn "从 hub.docker.com 下载 homeassistant/${machine}-homeassistant:${homeassistant_version}......${plain}"
     local i=10
     while true ;do
         docker pull homeassistant/${machine}-homeassistant:${homeassistant_version}
@@ -315,7 +309,7 @@ hassio_install(){
             docker tag homeassistant/${machine}-homeassistant:${homeassistant_version} homeassistant/${machine}-homeassistant:latest
             break;
         else
-            echo -e "${yellow}[WARNING]: 从 docker hub 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，第 ${i} 次重试.${plain}"
+            warn "[WARNING]: 从 docker hub 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，第 ${i} 次重试.${plain}"
             if [[ ${i} -eq 0 ]]; then
                 echo -e "${red}[ERROR]: 从 docker 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，请检查上方失败信息。${plain}"
                 exit 1
@@ -323,11 +317,11 @@ hassio_install(){
         fi
         let i--
     done
-    echo -e "${yellow}开始 hassio 安装流程。(如出现 [Warning] 请忽略，无须理会)${plain}"
+    warn "开始 hassio 安装流程。(如出现 [Warning] 请忽略，无须理会)${plain}"
     ./hassio_install.sh -m ${machine} --data-share ${data_share_path}
     
     if ! systemctl status hassio-supervisor > /dev/null ; then
-        error_exit "安装 hassio 失败，请将上方安装信息发送到论坛询问。脚本退出..."
+        error "安装 hassio 失败，请将上方安装信息发送到论坛询问。脚本退出..."
     fi
 }
 
@@ -335,9 +329,10 @@ ubuntu_docker_install(){
     apt install docker.io -y
 }
 
-error_exit(){
+error(){
     echo -e "${red}"
     echo "################# 发到论坛时，请把上方日志也一并粘贴发送 ################"
+    echo "########################### Script Version: ${script_version}###########################"
     echo "########################### System version ###########################"
     lsb_release -a 2>/dev/null
     echo "########################### System version 2 ###########################"
@@ -347,7 +342,7 @@ error_exit(){
     echo "########################### END ###########################"
     echo "${1}"
     echo -e "${plain}"
-    echo -e "${yellow} 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
+    warn " 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
     exit 1
 }
 
@@ -404,7 +399,7 @@ get_ipaddress(){
 print_sponsor(){
     local url='https://qr.alipay.com/fkx16030bqmbsoauc8ezmce'
     echo ''
-    echo -e "${yellow} [支付宝]： 如果你觉得本脚本帮到您，可以选择请我喝杯咖啡喔~😊 ${plain}"
+    warn " [支付宝]： 如果你觉得本脚本帮到您，可以选择请我喝杯咖啡喔~😊 ${plain}"
     qrencode -t UTF8 "${url}"
 }
 
@@ -594,59 +589,48 @@ read selected
 
 ## 切换安装源
 if  [[ ${apt_sources} == true ]]; then
-    echo -e "${yellow}[info]: 切换系统网络源.....${plain}"
+    info "切换系统网络源.....${plain}"
     replace_source
 else
-    echo -e "${yellow}[info]: 跳过切换系统源。${plain}"
+    info "跳过切换系统源。${plain}"
 fi
 
 ## 更新系统至最新
- # echo -e "${yellow}[info]: 更新系统至最新.....${plain}"
+ # info "更新系统至最新.....${plain}"
  # update_system
 
 ## 定义 Ubuntu 和 Debian 依赖
-echo -e "${yellow}[info]: 安装 hassio 必要依赖.....${plain}"
+info "安装 hassio 必要依赖.....${plain}"
 apt_install ${Ubunt_Debian_Requirements}
 
 ## 安装 Docker 引擎
 if ! command -v docker;then
-    echo -e "${yellow}[info]: 安装 Docker 引擎.....${plain}"
+    info "安装 Docker 引擎.....${plain}"
     if [[ ${release} == "ubuntu" ]]; then
         ubuntu_docker_install
     else
         docker_install
     fi
 else
-    echo -e "${yellow}[info]: 发现系统已安装 docker，跳过 docker 安装${plain}"
+    info "发现系统已安装 docker，跳过 docker 安装${plain}"
 fi
 
 ## 切换 Docker 源为国内源
 if [[ ${CDR} == true ]]; then
-    echo -e "${yellow}[info]: 切换 Docker 源为国内源....${plain}"
+    info "切换 Docker 源为国内源....${plain}"
     change_docker_registry
 else
-    echo -e "${yellow}[info]: 跳过切换 Docker 源....${plain}"
+    info "跳过切换 Docker 源....${plain}"
 fi
 
 ## 安装 hassio
-echo -e "${yellow}[info]: 安装 hassio......${plain}"
+info "安装 hassio......${plain}"
 hassio_install
 get_ipaddress
 if wait_homeassistant_run ;then
     echo -e "${green} hassio 安装完成，请输入 http://${ipaddress}:8123 访问你的 HomeAssistant${plain}"
-    echo -e "${yellow} 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
+    warn " 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
     print_sponsor
 else
-    echo "########################### Script Version: ${script_version}###########################"
-    echo "########################### Docker images ###########################"
-    docker images
-    echo "########################### Docker ps ###########################"
-    docker ps -a
-    echo "########################### hassio log ###########################"
-    docker logs hassio_supervisor
-    echo "########################### homeassistant log ###########################"
-    docker logs homeassistant
-    echo "########################### END ###########################"
-    echo -e "${red} homeassistant 启动超时，请检查上方日志....或者重启操作系统${plain}"
-    echo -e "${yellow} 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询${plain}"
+    error "等待 hassio 启动超时!"
 fi
