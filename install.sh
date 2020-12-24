@@ -260,8 +260,6 @@ cat << EOF > /etc/docker/daemon.json
     "log-driver": "journald",
     "storage-driver": "overlay2",
     "registry-mirrors": [ 
-    "https://dockerhub.azk8s.cn",
-    "https://reg-mirror.qiniu.com",
     "https://hub-mirror.c.163.com",
     "https://docker.mirrors.ustc.edu.cn"
     ]
