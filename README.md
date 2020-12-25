@@ -8,8 +8,8 @@ hassio 一键安装脚本，实现以下功能。
 ## 目前支持的系统
 
 - [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/) 测试版本 Raspberry Pi OS Lite 2020年12月2日通过
-- [Ubuntu](https://www.ubuntu.com/download/server) 测试版本 12.04 LTS通过。
-- [Debian](https://www.debian.org/distrib/netinst) 测试版本 >=10 通过。
+- [Ubuntu](https://www.ubuntu.com/download/server) 测试版本 12.04 LTS测试通过。
+- [Debian](https://www.debian.org/distrib/netinst) 测试版本 >=10 最小化版本测试通过。
 
 ## 使用方法
 
@@ -102,26 +102,6 @@ chmod a+x install.sh
 - raspberrypi3-64 ：树莓派三代64位系统
 - raspberrypi4-64 ：树莓派四代64位系统
 - tinker ：华硕tinker
-
-# Hassio 升级脚本
-
-由于网络原因，hassio_supervisor 经常如下报告:
-
-```bash
-18-08-15 03:57:02 WARNING (MainThread) [hassio.updater] Can't fetch versions from https://s3.amazonaws.com/hassio-version/stable.json
-```
-
-无法从亚马逊刷新最新版的 json 文件，导致 hassio 升级失败，我制作了 hassio 升级脚本，可以使用脚本手动升级。
-
-## 使用方法
-
-请使用 root 权限运行以下命令。
-
-```bash
-wget https://code.aliyun.com/neroxps/hassio_install/raw/master/hassio_upgrade.sh
-chmod u+x hassio_upgrade.sh
-./hassio_upgrade.sh
-```
 
 ## 操作说明
 
