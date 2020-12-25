@@ -88,8 +88,7 @@ download_file(){
         fi
     fi
     if [[ $? -ne 0 ]];then
-        echo -e "${red}[ERROR]: 下载 ${url} 失败，请检查网络与其连接是否正常。"
-        exit 1
+        error "下载 ${url} 失败，请检查网络与其连接是否正常。"
     fi
 }
 
@@ -230,7 +229,7 @@ docker_install(){
     chmod u+x get-docker.sh
     ./get-docker.sh --mirror Aliyun
     if ! systemctl status docker > /dev/null 2>&1 ;then
-        error "${red}[ERROR]: Docker 安装失败，请检查上方安装错误信息。 你也可以选择通过搜索引擎，搜索你系统安装docker的方法，安装后重新执行脚本。"
+        error "Docker 安装失败，请检查上方安装错误信息。 你也可以选择通过搜索引擎，搜索你系统安装docker的方法，安装后重新执行脚本。"
     else
         info "Docker 安装成功。"
     fi
@@ -245,7 +244,7 @@ apt_install(){
     apt update
     apt install -y ${*}
     if [[ $? -ne 0 ]];then
-        error "${red}[ERROR]: 安装${*}失败，请将检查上方安装错误信息。"
+        error "安装${*}失败，请将检查上方安装错误信息。"
     fi
 }
 
@@ -279,18 +278,18 @@ hassio_install(){
             break;
         fi
         if [[ $i -eq 0 ]]; then
-            error "${red}[ERROR]: 获取 hassio 版本号失败，请检查你系统网络与 https://version.home-assistant.io 的连接是否正常。"
+            error "获取 hassio 版本号失败，请检查你系统网络与 https://version.home-assistant.io 的连接是否正常。"
         fi
         let i--
     done
     hassio_version=$(echo ${stable_json} |jq -r '.supervisor')
     homeassistant_version=$(echo ${stable_json} |jq -r '.homeassistant.default')
     if [ -z ${hassio_version} ] || [ -z ${homeassistant_version} ];then
-        error "${red}[ERROR]: 获取 hassio 版本号失败，请检查你网络与 https://version.home-assistant.io 连接是否畅通。"
+        error "获取 hassio 版本号失败，请检查你网络与 https://version.home-assistant.io 连接是否畅通。"
     fi
     local x=1
     while true ; do
-        [[ $x -eq 10 ]] && error "${red}[ERROR]: 获取 hassio 官方一键脚本失败，请检查你系统网络与 https://code.aliyun.com/ 的连接是否正常。"
+        [[ $x -eq 10 ]] && error "获取 hassio 官方一键脚本失败，请检查你系统网络与 https://code.aliyun.com/ 的连接是否正常。"
         warn "下载 hassio_install.sh 官方脚本 第${x}次"
         download_file 'https://code.aliyun.com/neroxps/supervised-installer/raw/master/installer.sh' 'hassio_install.sh'
         grep -q '#!/usr/bin/env bash' hassio_install.sh && break
@@ -309,7 +308,7 @@ hassio_install(){
         else
             warn "[WARNING]: 从 docker hub 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，第 ${i} 次重试."
             if [[ ${i} -eq 0 ]]; then
-                echo -e "${red}[ERROR]: 从 docker 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，请检查上方失败信息。"
+                echo -e "从 docker 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，请检查上方失败信息。"
                 exit 1
             fi
         fi
@@ -339,7 +338,7 @@ error(){
     uname -a
     echo "########################### END ###########################"
     echo "${1}"
-    echo -e ""
+    echo -e "${plain}"
     warn " 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询"
     exit 1
 }
@@ -405,8 +404,7 @@ print_sponsor(){
 
 ## 检查脚本运行环境
 if ! id | grep -q 'root' 2>/dev/null ;then
-    echo -e "${red}[ERROR]: 请输入 \"sudo -s\" 切换至 root 账户运行本脚本...脚本退出"
-    exit 1
+   error "请输入 \"sudo -s\" 切换至 root 账户运行本脚本...脚本退出"
 fi
 
 ## 检查系统版本
@@ -432,7 +430,7 @@ while true; do
             ;;
     esac
 done
-check_massage+=(" # ${title_num}. 是否将系统源切换为清华源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)")
+check_massage+=(" # ${title_num}. 是否将系统源切换为清华源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
 let title_num++
 
 ### 2. 是否将用户添加至 docker 用户组
@@ -486,7 +484,7 @@ while true;do
         esac
     fi
 done
-check_massage+=(" # ${title_num}. 是否将用户添加至 Docker 用户组:   ${yellow}$(if [ -z ${add_User_Docker} ];then echo "否";else echo "是,添加用户为 ${add_User_Docker}";fi) ")
+check_massage+=(" # ${title_num}. 是否将用户添加至 Docker 用户组:   ${yellow}$(if [ -z ${add_User_Docker} ];then echo "否";else echo "是,添加用户为 ${add_User_Docker}";fi) ${plain}")
 let title_num++
 ### 3. 选择是否切换 Docker 国内源
 echo ''
@@ -507,7 +505,7 @@ while true; do
                 echo -e "输入错误，请重新输入。"
     esac
 done
-check_massage+=(" # ${title_num}. 是否将 Docker 源切换至国内源:     ${yellow}$(if ${CDR};then echo "是，切换源选择：${chack_massage_text}"; else echo "否";fi)")
+check_massage+=(" # ${title_num}. 是否将 Docker 源切换至国内源:     ${yellow}$(if ${CDR};then echo "是，切换源选择：${chack_massage_text}"; else echo "否";fi)${plain}")
 let title_num++
 
 ### 4. 选择设备类型，用于选择 hassio 拉取 homeassistant 容器之用。
@@ -539,7 +537,7 @@ while true;do
             ;;
     esac
 done
-check_massage+=(" # ${title_num}. 您的设备类型为:                   ${yellow}${machine}")
+check_massage+=(" # ${title_num}. 您的设备类型为:                   ${yellow}${machine}${plain}")
 let title_num++
 
 ### 5. 选择 hassio 数据保存路径。
@@ -576,7 +574,7 @@ while true;do
             ;;
     esac
 done
-check_massage+=(" # ${title_num}. 您的 hassio 数据路径为:           ${yellow}${data_share_path}")
+check_massage+=(" # ${title_num}. 您的 hassio 数据路径为:           ${yellow}${data_share_path}${plain}")
 
 echo " ################################################################################"
 for (( i = 0; i < ${#check_massage[@]}; i++ )); do echo -e "${check_massage[$i]}"; done 
@@ -626,7 +624,7 @@ info "安装 hassio......"
 hassio_install
 get_ipaddress
 if wait_homeassistant_run ;then
-    echo -e "${green} hassio 安装完成，请输入 http://${ipaddress}:8123 访问你的 HomeAssistant"
+    info "hassio 安装完成，请输入 http://${ipaddress}:8123 访问你的 HomeAssistant"
     warn " 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询"
     print_sponsor
 else
