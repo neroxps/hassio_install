@@ -99,34 +99,6 @@ replace_source(){
     fi
     [[ ! -f /etc/apt/sources.list.bak ]] && warn "备份系统源文件为 /etc/apt/sources.list.bak" && mv /etc/apt/sources.list /etc/apt/sources.list.bak
 
-    # 中科大
-    # case $(uname -m) in
-    #     "x86_64" | "i686" | "i386" )
-    #         if [[ ${release} == "debian" ]] || [[ ${release} == "ubuntu" ]]; then
-    #             download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
-    #         fi
-    #         ;;
-    #     "arm" | "armv7l" | "armv6l" | "aarch64" | "armhf" | "arm64" | "ppc64el")
-    #         if [[ -f /etc/apt/sources.list.d/armbian.list ]] ;then
-    #             warn "发现 armbian 源，重命名armbian无法访问的源，如需要恢复请自行到 /etc/apt/sources.list.d/ 文件夹中删除后缀名 \".bak\""
-    #             mv /etc/apt/sources.list.d/armbian.list /etc/apt/sources.list.d/armbian.list.bak
-    #         fi
-    #         if [[ ${release} == "debian" ]]; then
-    #             download_file https://mirrors.ustc.edu.cn/repogen/conf/${release}-http-4-${systemCodename} /etc/apt/sources.list
-    #         elif [[  ${release} == "raspbian" ]]; then
-    #             echo "deb http://mirrors.ustc.edu.cn/raspbian/raspbian/ ${systemCodename} main contrib non-free rpi" > /etc/apt/sources.list
-    #             echo "deb http://mirrors.ustc.edu.cn/archive.raspberrypi.org/debian/ ${systemCodename} main ui" >> /etc/apt/sources.list
-    #         elif [[ ${release} == "ubuntu" ]]; then
-    #             echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename} main restricted universe multiverse" > /etc/apt/sources.list
-    #             echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-updates main restricted universe multiverse" >> /etc/apt/sources.list
-    #             echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-backports main restricted universe multiverse" >> /etc/apt/sources.list
-    #             echo "deb http://mirrors.ustc.edu.cn/ubuntu-ports/ ${systemCodename}-security main restricted universe multiverse" >> /etc/apt/sources.list
-    #         fi
-    #         ;;
-    #     *)  error "[ERROR]: 由于无法获取系统架构，故此无法切换系统源，请跳过系统源切换。"
-    #         ;;
-    # esac
-
     # 清华源
 
     case $(uname -m) in
@@ -191,11 +163,6 @@ replace_source(){
         *)  error "[ERROR]: 由于无法获取系统架构，故此无法切换系统源，请跳过系统源切换。"
             ;;
     esac
-
-#####
-
-
-
 
     apt update
     if [[ $? -ne 0 ]]; then
@@ -308,8 +275,7 @@ hassio_install(){
         else
             warn "[WARNING]: 从 docker hub 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，第 ${i} 次重试."
             if [[ ${i} -eq 0 ]]; then
-                echo -e "从 docker 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，请检查上方失败信息。"
-                exit 1
+               error "从 docker 下载 homeassistant/${machine}-homeassistant:${homeassistant_version} 失败，请检查上方失败信息。"
             fi
         fi
         let i--
