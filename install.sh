@@ -5,7 +5,7 @@ red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
-script_version="2020.12.25.0"
+script_version="2020.12.28.0"
 
 function info { echo -e "\e[32m[info] $*\e[39m"; }
 function warn  { echo -e "\e[33m[warn] $*\e[39m"; }
@@ -264,7 +264,17 @@ hassio_install(){
     done
     chmod u+x hassio_install.sh
     sed -i "s/HASSIO_VERSION=.*/HASSIO_VERSION=${hassio_version}/g" ./hassio_install.sh
+    # 替换链接到阿里云加速
     sed -i 's@https://raw.githubusercontent.com/home-assistant/supervised-installer/master/@https://code.aliyun.com/neroxps/supervised-installer/raw/master/@g' ./hassio_install.sh
+    # interfaces 不替换ip设置
+    sed -i 's@read answer < /dev/tty@answer=n@' ./hassio_install.sh
+    # 清除警告等待
+    sed -i 's/sleep 10//' ./hassio_install.sh
+    # 等待 NetworkManager 重启完毕
+    reset_network_line_num=$(grep -n 'systemctl restart "${SERVICE_NM}"' ./hassio_install.sh | awk -F ':' '{print $1}')
+    add_shell='i=20\ninfo "Wait for networkmanages to start."\nwhile ! systemctl status ${SERVICE_NM} >/dev/null 2>&1; do\n    sleep 1\nlet i--\n    [[ i -eq 0 ]] && warn "networkmanages failed to start" && break\ndone'
+    sed -i "${reset_network_line_num} a${add_shell}" ./hassio_install.sh
+
     warn "从 hub.docker.com 下载 homeassistant/${machine}-homeassistant:${homeassistant_version}......"
     local i=10
     while true ;do
@@ -366,6 +376,47 @@ print_sponsor(){
     qrencode -t UTF8 "${url}"
 }
 
+# 更新 github hosts 文件到 coreDNS 的 hosts 文件里加速 addons clone 速度
+## hosts 文件来自 github.com/jianboy/github-host 项目
+github_set_hosts_to_coreDNS(){
+    info "开始 github hosts 流程"
+    local hosts_path="${data_share_path}/dns/hosts"
+    local github_host_url='https://cdn.jsdelivr.net/gh/jianboy/github-host/hosts'
+    local github_hosts
+
+    # 获取最新的 github 地址
+    githubHosts_get_hosts(){
+        local i=0
+        while [[ -z ${github_hosts} ]];do
+            github_hosts=$(curl -sL ${github_host_url})
+            ((i=i+1))
+            if [[ i -gt 10 ]]; then
+                warn "尝试 10 次依然无法从 ${github_host_url} 下载 hosts,请检查网络连通性."
+                warn "跳过 github hosts 设置."
+                return 1
+            fi
+        done
+        info "github hosts 下载完成."
+    }
+
+    # 写入 hosts 文件
+    write_hosts(){
+        # 等待 coreDNS 的 hosts 文件生成后再写入
+        info "等待 coreDNS 的 hosts 文件生成后写入 github hosts"
+        while true;do
+            if [[ -f ${hosts_path} ]] && [[ $(wc -l ${hosts_path} 2>/dev/null | awk '{print $1}') -gt 0  ]]; then
+                info "写入 github ip 到 hosts 文件."
+                sleep 3
+                echo "${github_hosts}" >> ${hosts_path}
+                break;
+            fi
+            sleep 1
+        done
+        info "github hosts 写入完毕."
+    }
+    githubHosts_get_hosts && write_hosts
+}
+
 # Main
 
 ## 检查脚本运行环境
@@ -396,7 +447,7 @@ while true; do
             ;;
     esac
 done
-check_massage+=(" # ${title_num}. 是否将系统源切换为清华源: ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
+check_massage+=(" # ${title_num}. 是否将系统源切换为清华源:       ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
 let title_num++
 
 ### 2. 是否将用户添加至 docker 用户组
@@ -541,6 +592,32 @@ while true;do
     esac
 done
 check_massage+=(" # ${title_num}. 您的 hassio 数据路径为:           ${yellow}${data_share_path}${plain}")
+let title_num++
+
+### 6. 选择是否加入 github hosts 到 coreDNS。
+echo ''
+echo ''
+while true;do
+    echo -e "(${title_num}).是否将 github hosts 写入 coreDNS"
+    echo -e "或许有效加快 hassio 第一次启动时 clone addons 速度"
+    echo -e "hosts 文件来自 https://github.com/jianboy/github-host 项目"
+    warn "如有爬墙环境请输入 N"
+    read -p "请输入 yes 或 no (默认：no）:" selected
+    case ${selected} in
+        Yes|YES|yes|y|Y)
+            set_github_hosts_to_coreDNS=true
+            break;
+            ;;
+        ''|No|NO|no|n|N)
+            set_github_hosts_to_coreDNS=false
+            break;
+            ;;
+        *)
+            echo -e "请输入 Yes 或者 No 后按回车确认。"
+            ;;
+    esac
+done
+check_massage+=(" # ${title_num}. 是否将 github hosts 写入 coreDNS: ${yellow}$(if ${set_github_hosts_to_coreDNS};then echo "是"; else echo "否";fi)${plain}")
 
 echo " ################################################################################"
 for (( i = 0; i < ${#check_massage[@]}; i++ )); do echo -e "${check_massage[$i]}"; done 
@@ -584,11 +661,13 @@ if [[ ${CDR} == true ]]; then
 else
     info "跳过切换 Docker 源...."
 fi
-
+get_ipaddress
 ## 安装 hassio
 info "安装 hassio......"
 hassio_install
-get_ipaddress
+if [[ ${set_github_hosts_to_coreDNS} == true ]]; then
+    github_set_hosts_to_coreDNS &
+fi
 if wait_homeassistant_run ;then
     info "hassio 安装完成，请输入 http://${ipaddress}:8123 访问你的 HomeAssistant"
     warn " 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询"
