@@ -5,7 +5,7 @@ red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
-script_version="2020.12.28.0"
+script_version="2020.12.30.0"
 
 function info { echo -e "\e[32m[info] $*\e[39m"; }
 function warn  { echo -e "\e[33m[warn] $*\e[39m"; }
@@ -421,7 +421,12 @@ github_set_hosts_to_coreDNS(){
 
 ## 检查脚本运行环境
 if ! id | grep -q 'root' 2>/dev/null ;then
-   error "请输入 \"sudo -s\" 切换至 root 账户运行本脚本...脚本退出"
+    error "请输入 \"sudo -s\" 切换至 root 账户运行本脚本...脚本退出"
+fi
+
+## 检查环境变量
+if ! echo $PATH | grep sbin > /dev/null 2>&1 ;then
+    error "请使用 sudo -s 切换 root 账号,或者 sudo ./install.sh 运行脚本, su 环境变量不符合脚本要求."
 fi
 
 ## 检查系统版本
