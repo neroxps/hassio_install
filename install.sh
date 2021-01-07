@@ -430,7 +430,7 @@ if ! echo $PATH | grep sbin > /dev/null 2>&1 ;then
 fi
 
 ## 检查是否运行于 systemd 环境
-if ! pstree | sed -n '1p' | grep systemd > /dev/null 2>&1 ;then
+if ! ps --no-headers -o comm 1 | grep systemd > /dev/null 2>&1 ;then
     error "你的系统不是运行在 systemd 环境下,本脚本不支持此系统!(如 android 之类的虚拟 Linux)"
 fi
 
