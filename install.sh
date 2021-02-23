@@ -5,7 +5,7 @@ red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
-script_version="2021.01.07.0"
+script_version="2021.02.23.0"
 
 function info { echo -e "\e[32m[info] $*\e[39m"; }
 function warn  { echo -e "\e[33m[warn] $*\e[39m"; }
@@ -460,7 +460,30 @@ done
 check_massage+=(" # ${title_num}. 是否将系统源切换为清华源:       ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
 let title_num++
 
-### 2. 是否将用户添加至 docker 用户组
+### 2. 选择是否更新系统软件到最新
+echo ''
+echo ''
+echo -e "(${title_num}).是否更新系统软件到最新？"
+warn "如果系统依赖版本低于 supervisor 要求,会导致 supervisor 显示系统不健康,最终导致无法安装 addons."
+while true; do
+    read -p '请输入 yes 或者 no（默认：no）：' selected
+    case ${selected} in
+        Yes|YES|yes|y|Y)
+                is_upgrade_system=true
+                break;
+            ;;
+        ''|No|NO|no|n|N)
+                is_upgrade_system=false
+                break;
+            ;;
+        *)
+                echo -e "输入错误，请重新输入。"
+    esac
+done
+check_massage+=(" # ${title_num}. 是否更新系统软件到最新:     ${yellow}$(if ${is_upgrade_system};then echo "是，更新系统：${chack_massage_text}"; else echo "否";fi)${plain}")
+let title_num++
+
+### 3. 是否将用户添加至 docker 用户组
 echo ''
 echo ''
 while true;do
@@ -513,7 +536,7 @@ while true;do
 done
 check_massage+=(" # ${title_num}. 是否将用户添加至 Docker 用户组:   ${yellow}$(if [ -z ${add_User_Docker} ];then echo "否";else echo "是,添加用户为 ${add_User_Docker}";fi) ${plain}")
 let title_num++
-### 3. 选择是否切换 Docker 国内源
+### 4. 选择是否切换 Docker 国内源
 echo ''
 echo ''
 echo -e "(${title_num}).是否需要替换 docker 默认源？"
@@ -535,7 +558,7 @@ done
 check_massage+=(" # ${title_num}. 是否将 Docker 源切换至国内源:     ${yellow}$(if ${CDR};then echo "是，切换源选择：${chack_massage_text}"; else echo "否";fi)${plain}")
 let title_num++
 
-### 4. 选择设备类型，用于选择 hassio 拉取 homeassistant 容器之用。
+### 5. 选择设备类型，用于选择 hassio 拉取 homeassistant 容器之用。
 echo ''
 echo ''
 while true;do
@@ -567,7 +590,7 @@ done
 check_massage+=(" # ${title_num}. 您的设备类型为:                   ${yellow}${machine}${plain}")
 let title_num++
 
-### 5. 选择 hassio 数据保存路径。
+### 6. 选择 hassio 数据保存路径。
 echo ''
 echo ''
 while true;do
@@ -604,7 +627,7 @@ done
 check_massage+=(" # ${title_num}. 您的 hassio 数据路径为:           ${yellow}${data_share_path}${plain}")
 let title_num++
 
-### 6. 选择是否加入 github hosts 到 coreDNS。
+### 7. 选择是否加入 github hosts 到 coreDNS。
 echo ''
 echo ''
 while true;do
@@ -645,8 +668,10 @@ else
 fi
 
 ## 更新系统至最新
- # info "更新系统至最新....."
- # update_system
+if [[ ${is_upgrade_system} == true ]]; then
+    info "更新系统至最新....."
+    update_system
+fi
 
 ## 定义 Ubuntu 和 Debian 依赖
 info "安装 hassio 必要依赖....."
