@@ -13,7 +13,7 @@ function version_lt() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)"
 
 # 变量
 ## 安装必备依赖
-Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode apparmor apparmor-utils"
+Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode apparmor apparmor-utils dnsutils"
 
 ## 获取系统用户用作添加至 docker 用户组
 users=($(cat /etc/passwd | awk -F: '$3>=500' | cut -f 1 -d :| grep -v nobody))
@@ -21,6 +21,7 @@ users_num=${#users[*]}
 
 title_num=1
 check_massage=()
+dns_ipaddress=""
 
 ## 检查系统架构以区分 machine
 if [[ $(getconf LONG_BIT) == "64" ]]; then
@@ -359,6 +360,18 @@ check_ip()
     fi
 }
 
+# 检查 dns 服务器是否正常
+check_dns_server(){
+    local ip="${1}"
+    info "正在检测 DNS 服务器 ${1} 可用性,请稍后..."
+    if dig @$ip github.com > /dev/null 2>&1; then
+        return 0
+    else
+        warn "你的 $ip 服务器无法解析 github.com \n$(dig @$ip github.com)"
+        return 1
+    fi
+}
+
 #通过默认网关的网卡接口获取本机有效的IP地址
 get_ipaddress(){
     local device_name=$(netstat -rn | grep -e '^0\.0\.0\.0' | awk '{print $8}' | head -n1)
@@ -376,7 +389,7 @@ print_sponsor(){
     qrencode -t UTF8 "${url}"
 }
 
-# 更新 github hosts 文件到 coreDNS 的 hosts 文件里加速 addons clone 速度
+#更新 github hosts 文件到 coreDNS 的 hosts 文件里加速 addons clone 速度
 ## hosts 文件来自 github.com/jianboy/github-host 项目
 github_set_hosts_to_coreDNS(){
     info "开始 github hosts 流程"
@@ -417,6 +430,21 @@ github_set_hosts_to_coreDNS(){
     githubHosts_get_hosts && write_hosts
 }
 
+# 修改 hassio_dns 上游 DNS 设置为本地路由服务器
+setting_hassio_dns_option_dns_server(){
+    info "开始设置 hassio_dns 上游 DNS 服务器"
+    while true ; do
+        if ha dns info > /dev/null 2>&1; then
+            sleep 3
+            info "hassio_dns 已启动,正应用 dns 设置"
+            ha dns option --servers "dns://${dns_ipaddress}"
+            ha dns restart
+            break;
+        fi
+        sleep 1
+    done
+}
+
 # Main
 
 ## 检查脚本运行环境
@@ -438,7 +466,37 @@ fi
 check_sys
 
 ## 配置安装选项
-### 1. 配置安装源
+### 1.警告信息
+echo -e "(${title_num}). 你是否有“出国旅游”环境,如果没有建议停止使用 supervisor(hassio)"
+echo -e "    由于 supervisor 内的 addons 全部基于 github 存储,而 addons 镜像仓库地址全部改为 ghcr.io"
+echo -e "    ghcr.io 是 github 推出的容器镜像存储服务,目前国内还没有加速器,所以你安装 addons 将会很慢很慢"
+while true; do
+    read -p "请输入 y or n（默认 no):" selected
+    case ${selected} in
+        yes|y|YES|Y|Yes )
+            while true; do
+                read -p "请输入你“出国旅游”路由器的IP地址,作为 hassio_dns 上游 IP:" dns_ipaddress
+                if check_ip "${dns_ipaddress}" && check_dns_server "${dns_ipaddress}" ;then
+                    echo -e "你输入IP地址为 ${dns_ipaddress}"
+                    break;
+                else
+                    echo -e "你输入的IP地址 ${dns_ipaddress} 不正确,请从新输入."
+                fi
+            done
+            break;
+            ;;
+        ''|no|n|NO|N|No)
+            error "用户选择退出脚本."
+            ;;
+        *)
+            echo "输入错误，请重新输入。"
+            ;;
+    esac
+done
+check_massage+=(" # ${title_num}. 是否有“出国旅游”环境:             ${yellow}是${plain}")
+let title_num++
+
+## 2. 配置安装源
 
 echo -e "(${title_num}). 是否将系统源切换为清华源（目前支持 Debian Ubuntu Raspbian 三款系统）"
 while true; do
@@ -457,10 +515,10 @@ while true; do
             ;;
     esac
 done
-check_massage+=(" # ${title_num}. 是否将系统源切换为清华源:       ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
+check_massage+=(" # ${title_num}. 是否将系统源切换为清华源:         ${yellow}$(if ${apt_sources};then echo "是";else echo "否";fi)${plain}")
 let title_num++
 
-### 2. 选择是否更新系统软件到最新
+### 3. 选择是否更新系统软件到最新
 echo ''
 echo ''
 echo -e "(${title_num}).是否更新系统软件到最新？"
@@ -480,10 +538,10 @@ while true; do
                 echo -e "输入错误，请重新输入。"
     esac
 done
-check_massage+=(" # ${title_num}. 是否更新系统软件到最新:     ${yellow}$(if ${is_upgrade_system};then echo "是，更新系统：${chack_massage_text}"; else echo "否";fi)${plain}")
+check_massage+=(" # ${title_num}. 是否更新系统软件到最新:           ${yellow}$(if ${is_upgrade_system};then echo "是，更新系统：${chack_massage_text}"; else echo "否";fi)${plain}")
 let title_num++
 
-### 3. 是否将用户添加至 docker 用户组
+### 4. 是否将用户添加至 docker 用户组
 echo ''
 echo ''
 while true;do
@@ -536,7 +594,7 @@ while true;do
 done
 check_massage+=(" # ${title_num}. 是否将用户添加至 Docker 用户组:   ${yellow}$(if [ -z ${add_User_Docker} ];then echo "否";else echo "是,添加用户为 ${add_User_Docker}";fi) ${plain}")
 let title_num++
-### 4. 选择是否切换 Docker 国内源
+### 5. 选择是否切换 Docker 国内源
 echo ''
 echo ''
 echo -e "(${title_num}).是否需要替换 docker 默认源？"
@@ -558,7 +616,7 @@ done
 check_massage+=(" # ${title_num}. 是否将 Docker 源切换至国内源:     ${yellow}$(if ${CDR};then echo "是，切换源选择：${chack_massage_text}"; else echo "否";fi)${plain}")
 let title_num++
 
-### 5. 选择设备类型，用于选择 hassio 拉取 homeassistant 容器之用。
+### 6. 选择设备类型，用于选择 hassio 拉取 homeassistant 容器之用。
 echo ''
 echo ''
 while true;do
@@ -590,7 +648,7 @@ done
 check_massage+=(" # ${title_num}. 您的设备类型为:                   ${yellow}${machine}${plain}")
 let title_num++
 
-### 6. 选择 hassio 数据保存路径。
+### 7. 选择 hassio 数据保存路径。
 echo ''
 echo ''
 while true;do
@@ -627,21 +685,20 @@ done
 check_massage+=(" # ${title_num}. 您的 hassio 数据路径为:           ${yellow}${data_share_path}${plain}")
 let title_num++
 
-### 7. 选择是否加入 github hosts 到 coreDNS。
+### 8. 选择是否加入 github hosts 到 coreDNS。
 echo ''
 echo ''
 while true;do
     echo -e "(${title_num}).是否将 github hosts 写入 coreDNS"
     echo -e "或许有效加快 hassio 第一次启动时 clone addons 速度"
     echo -e "hosts 文件来自 https://github.com/jianboy/github-host 项目"
-    warn "如有爬墙环境请输入 N"
-    read -p "请输入 yes 或 no (默认：no）:" selected
+    read -p "请输入 yes 或 no (默认：yes）:" selected
     case ${selected} in
-        Yes|YES|yes|y|Y)
+        ''|Yes|YES|yes|y|Y)
             set_github_hosts_to_coreDNS=true
             break;
             ;;
-        ''|No|NO|no|n|N)
+        No|NO|no|n|N)
             set_github_hosts_to_coreDNS=false
             break;
             ;;
@@ -703,7 +760,9 @@ hassio_install
 if [[ ${set_github_hosts_to_coreDNS} == true ]]; then
     github_set_hosts_to_coreDNS &
 fi
+
 if wait_homeassistant_run ;then
+    setting_hassio_dns_option_dns_server
     info "hassio 安装完成，请输入 http://${ipaddress}:8123 访问你的 HomeAssistant"
     warn " 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询"
     print_sponsor
