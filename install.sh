@@ -12,9 +12,6 @@ function warn  { echo -e "\e[33m[warn] $*\e[39m"; }
 function version_lt() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"; }
 
 # 变量
-## 脚本依赖
-script_requirements="dnsutils"
-
 ## 安装必备依赖
 Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode apparmor apparmor-utils"
 
@@ -363,18 +360,6 @@ check_ip()
     fi
 }
 
-# 检查 dns 服务器是否正常
-check_dns_server(){
-    local ip="${1}"
-    info "正在检测 DNS 服务器 ${1} 可用性,请稍后..."
-    if dig @$ip github.com > /dev/null 2>&1; then
-        return 0
-    else
-        warn "你的 $ip 服务器无法解析 github.com \n$(dig @$ip github.com)"
-        return 1
-    fi
-}
-
 #通过默认网关的网卡接口获取本机有效的IP地址
 get_ipaddress(){
     local device_name=$(netstat -rn | grep -e '^0\.0\.0\.0' | awk '{print $8}' | head -n1)
@@ -448,6 +433,16 @@ setting_hassio_dns_option_dns_server(){
     done
 }
 
+# 检查出国旅游连通性
+check_proxy_status(){
+    info "正在通过访问 www.youtube.com 检查旅游环境"
+    if ! wget -q --connect-timeout 20 --tries 1 --retry-connrefused  https://www.youtube.com -O /tmp/youtube ;then
+        warn "旅游失败,请检查出国旅游环境."
+        return 1
+    fi
+    return 0
+}
+
 # Main
 
 ## 检查脚本运行环境
@@ -465,8 +460,6 @@ if ! ps --no-headers -o comm 1 | grep systemd > /dev/null 2>&1 ;then
     error "你的系统不是运行在 systemd 环境下,本脚本不支持此系统!(如 android 之类的虚拟 Linux)"
 fi
 
-apt_install "${script_requirements}"
-
 ## 检查系统版本
 check_sys
 
@@ -481,11 +474,11 @@ while true; do
         yes|y|YES|Y|Yes )
             while true; do
                 read -p "请输入你“出国旅游”路由器的IP地址,作为 hassio_dns 上游 IP:" dns_ipaddress
-                if check_ip "${dns_ipaddress}" && check_dns_server "${dns_ipaddress}" ;then
+                if check_ip "${dns_ipaddress}" && check_proxy_status ;then
                     echo -e "你输入IP地址为 ${dns_ipaddress}"
                     break;
                 else
-                    echo -e "你输入的IP地址 ${dns_ipaddress} 不正确,请从新输入."
+                    warn "你的出国旅游环境不正常,请检查或者更换IP地址."
                 fi
             done
             break;
