@@ -5,15 +5,18 @@ red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
-script_version="2021.02.23.0"
+script_version="2021.04.09.0"
 
 function info { echo -e "\e[32m[info] $*\e[39m"; }
 function warn  { echo -e "\e[33m[warn] $*\e[39m"; }
 function version_lt() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"; }
 
 # 变量
+## 脚本依赖
+script_requirements="dnsutils"
+
 ## 安装必备依赖
-Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode apparmor apparmor-utils dnsutils"
+Ubunt_Debian_Requirements="curl socat jq avahi-daemon net-tools network-manager qrencode apparmor apparmor-utils"
 
 ## 获取系统用户用作添加至 docker 用户组
 users=($(cat /etc/passwd | awk -F: '$3>=500' | cut -f 1 -d :| grep -v nobody))
@@ -461,6 +464,8 @@ fi
 if ! ps --no-headers -o comm 1 | grep systemd > /dev/null 2>&1 ;then
     error "你的系统不是运行在 systemd 环境下,本脚本不支持此系统!(如 android 之类的虚拟 Linux)"
 fi
+
+apt_install "${script_requirements}"
 
 ## 检查系统版本
 check_sys
