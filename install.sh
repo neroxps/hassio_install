@@ -316,7 +316,7 @@ error(){
     echo "########################### END ###########################"
     echo "${1}"
     echo -e "${plain}"
-    warn " 相关问题可以访问https://bbs.iobroker.cn或者加QQ群776817275咨询"
+    warn " 相关问题可以访问https://bbs.iobroker.cn/t/topic/1404或者加QQ群776817275咨询"
     exit 1
 }
 
