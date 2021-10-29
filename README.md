@@ -1,5 +1,8 @@
 # 本脚本不再维护，江湖再见！
 
+# 请参阅官方 supervisor installer 项目获取安装方法
+# [supervised-installer](https://github.com/home-assistant/supervised-installer)
+
 # hassio_install
 
 hassio 一键安装脚本，实现以下功能。
