@@ -445,6 +445,11 @@ check_proxy_status(){
 
 # Main
 
+warn "homeassistant supervisor 安装方式已经改变，请参阅官方 supervisor installer 项目获得安装方法。"
+warn "https://github.com/home-assistant/supervised-installer"
+warn "本脚本已停止维护，不再更新，谢谢陪伴，江湖再见！"
+exit 0 
+
 ## 检查脚本运行环境
 if ! id | grep -q 'root' 2>/dev/null ;then
     error "请输入 \"sudo -s\" 切换至 root 账户运行本脚本...脚本退出"
